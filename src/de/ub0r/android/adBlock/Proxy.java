@@ -53,7 +53,6 @@ public class Proxy extends Service implements Runnable {
 	public void run() {
 		try {
 			ServerSocket sock = new ServerSocket(this.port);
-			sock.bind(null);
 			Socket client;
 			while (!stop) {
 				client = sock.accept();
@@ -62,7 +61,7 @@ public class Proxy extends Service implements Runnable {
 					t.start();
 				}
 			}
-		} catch (Exception e) {
+		} catch (IOException e) {
 			e.printStackTrace();
 			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
 		}
