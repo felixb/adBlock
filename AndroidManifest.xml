@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
       package="de.ub0r.android.adBlock"
-      android:versionCode="1"
-      android:versionName="1.0">
-    <application android:icon="@drawable/icon" android:label="@string/app_name">
+      android:versionName="0.0.1" android:versionCode="1">
+    <application android:icon="@drawable/icon" android:label="@string/app_name" android:debuggable="true">
         <activity android:name=".AdBlock"
                   android:label="@string/app_name">
             <intent-filter>
@@ -11,6 +10,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-    </application>
+    <service android:name="Proxy" android:exported="false"></service>
+</application>
     <uses-sdk android:minSdkVersion="3" />
+<uses-permission android:name="android.permission.INTERNET"></uses-permission>
 </manifest> 
