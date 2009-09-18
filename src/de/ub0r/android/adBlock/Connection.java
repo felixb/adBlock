@@ -2,14 +2,10 @@ package de.ub0r.android.adBlock;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.net.SocketAddress;
 
 import android.content.Context;
 import android.widget.Toast;
@@ -20,7 +16,7 @@ public class Connection implements Runnable {
 	private Socket remote;
 	private final Context cont;
 
-	public Connection(final Socket socket, Context context) {
+	public Connection(final Socket socket, final Context context) {
 		this.local = socket;
 		this.cont = context;
 	}
@@ -29,9 +25,9 @@ public class Connection implements Runnable {
 	public void run() {
 		try {
 			BufferedReader localReader = new BufferedReader(
-					new InputStreamReader(local.getInputStream()));
+					new InputStreamReader(this.local.getInputStream()));
 			BufferedWriter localWriter = new BufferedWriter(
-					new OutputStreamWriter(local.getOutputStream()));
+					new OutputStreamWriter(this.local.getOutputStream()));
 			BufferedReader remoteReader = null;
 			BufferedWriter remoteWriter = null;
 			StringBuilder buffer = new StringBuilder();
@@ -66,10 +62,10 @@ public class Connection implements Runnable {
 			}
 			if (this.remote != null && this.remote.isConnected()) {
 				Thread t1 = new Thread(new CopyStream(remoteReader,
-						localWriter, remote));
+						localWriter, this.remote));
 				t1.start();
 				Thread t2 = new Thread(new CopyStream(localReader,
-						remoteWriter, remote));
+						remoteWriter, this.remote));
 				t2.start();
 				t1.join();
 				t2.join();
@@ -82,7 +78,7 @@ public class Connection implements Runnable {
 			// do nothing
 		} catch (Exception e) {
 			e.printStackTrace();
-			Toast.makeText(cont, e.toString(), Toast.LENGTH_LONG).show();
+			Toast.makeText(this.cont, e.toString(), Toast.LENGTH_LONG).show();
 		}
 	}
 }

@@ -14,34 +14,35 @@ import android.widget.Toast;
 
 /**
  * @author flx
- *
  */
 public class Proxy extends Service implements Runnable {
-	
+
 	private Thread proxy = null;
 	private int port = 8088;
 	private boolean stop = false;
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see android.app.Service#onBind(android.content.Intent)
 	 */
 	@Override
-	public IBinder onBind(Intent intent) {
+	public IBinder onBind(final Intent intent) {
 		return null;
 	}
 
 	@Override
-	public void onStart(Intent intent, int startId) {
+	public void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
-		if (proxy == null) {
+		if (this.proxy == null) {
 			Toast.makeText(this, "starting proxy..", Toast.LENGTH_LONG).show();
-			proxy = new Thread(this);
-			proxy.start();
+			this.proxy = new Thread(this);
+			this.proxy.start();
 		} else {
 			Toast.makeText(this, "proxy running", Toast.LENGTH_LONG).show();
 		}
 	}
-	
+
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
@@ -54,7 +55,7 @@ public class Proxy extends Service implements Runnable {
 		try {
 			ServerSocket sock = new ServerSocket(this.port);
 			Socket client;
-			while (!stop) {
+			while (!this.stop) {
 				client = sock.accept();
 				if (client != null) {
 					Thread t = new Thread(new Connection(client, this));
