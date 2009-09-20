@@ -23,21 +23,50 @@ import android.widget.Toast;
  */
 public class Proxy extends Service implements Runnable {
 
+	/** Proxy. */
 	private Thread proxy = null;
+	/** Proxy's port. */
 	private int port = 8080;
+	/** Stop proxy? */
 	private boolean stop = false;
 
+	/**
+	 * Class to handle a single proxy connection.
+	 * 
+	 * @author flx
+	 */
 	private class Connection implements Runnable {
 
+		/** Local Socket. */
 		private final Socket local;
+		/** Remote Socket. */
 		private Socket remote;
+		/** Context in which the app is running. */
 		private final Context cont;
 
+		/**
+		 * Class to Copy a Stream into an other Stream in a Thread.
+		 * 
+		 * @author flx
+		 */
 		private class CopyStream implements Runnable {
+			/** Reader. */
 			private final BufferedReader reader;
+			/** Writer. */
 			private final BufferedWriter writer;
+			/** Object to notify with at EOF. */
 			private final Object sync;
 
+			/**
+			 * Constructor.
+			 * 
+			 * @param r
+			 *            reader
+			 * @param w
+			 *            writer
+			 * @param s
+			 *            object to sync with
+			 */
 			public CopyStream(final BufferedReader r, final BufferedWriter w,
 					final Object s) {
 				this.reader = r;
@@ -45,6 +74,9 @@ public class Proxy extends Service implements Runnable {
 				this.sync = s;
 			}
 
+			/**
+			 * Run by Thread.start().
+			 */
 			@Override
 			public void run() {
 				try {
@@ -67,11 +99,22 @@ public class Proxy extends Service implements Runnable {
 			}
 		}
 
+		/**
+		 * Constructor.
+		 * 
+		 * @param socket
+		 *            local Socket
+		 * @param context
+		 *            global Context
+		 */
 		public Connection(final Socket socket, final Context context) {
 			this.local = socket;
 			this.cont = context;
 		}
 
+		/**
+		 * Run by Thread.start().
+		 */
 		@Override
 		public void run() {
 			try {
@@ -145,18 +188,29 @@ public class Proxy extends Service implements Runnable {
 		}
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * Default Implementation.
 	 * 
+	 * @param intent
+	 *            called Intent
+	 * @return IBinder
 	 * @see android.app.Service#onBind(android.content.Intent)
 	 */
 	@Override
-	public IBinder onBind(final Intent intent) {
+	public final IBinder onBind(final Intent intent) {
 		return null;
 	}
 
+	/**
+	 * Called on start.
+	 * 
+	 * @param intent
+	 *            Intent called
+	 * @param startId
+	 *            start ID
+	 */
 	@Override
-	public void onStart(final Intent intent, final int startId) {
+	public final void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
 		if (this.proxy == null) {
 			Toast.makeText(this, "starting proxy..", Toast.LENGTH_LONG).show();
@@ -167,15 +221,21 @@ public class Proxy extends Service implements Runnable {
 		}
 	}
 
+	/**
+	 * Called on destroy.
+	 */
 	@Override
-	public void onDestroy() {
+	public final void onDestroy() {
 		super.onDestroy();
 		Toast.makeText(this, "stopping proxy..", Toast.LENGTH_LONG).show();
 		this.stop = true;
 	}
 
+	/**
+	 * Run by Thread.start().
+	 */
 	@Override
-	public void run() {
+	public final void run() {
 		try {
 			ServerSocket sock = new ServerSocket(this.port);
 			Socket client;
