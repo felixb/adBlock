@@ -120,7 +120,6 @@ public class Proxy extends Service implements Runnable {
 							localWriter, sync));
 					Thread t2 = new Thread(new CopyStream(localReader,
 							remoteWriter, sync));
-
 					try {
 						synchronized (sync) {
 							t1.start();
@@ -130,10 +129,8 @@ public class Proxy extends Service implements Runnable {
 					} catch (InterruptedException e) {
 						e.printStackTrace();
 					}
-					System.out.println("join");
 					t1.join();
 					t2.join();
-					System.out.println("close local");
 					this.local.close();
 				}
 			} catch (InterruptedException e) {
