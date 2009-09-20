@@ -24,7 +24,7 @@ import android.widget.Toast;
 public class Proxy extends Service implements Runnable {
 
 	private Thread proxy = null;
-	private int port = 8088;
+	private int port = 8080;
 	private boolean stop = false;
 
 	private class Connection implements Runnable {
@@ -36,13 +36,13 @@ public class Proxy extends Service implements Runnable {
 		private class CopyStream implements Runnable {
 			private final BufferedReader reader;
 			private final BufferedWriter writer;
-			private final Socket socket;
+			private final Object sync;
 
 			public CopyStream(final BufferedReader r, final BufferedWriter w,
-					final Socket s) {
+					final Object s) {
 				this.reader = r;
 				this.writer = w;
-				this.socket = s;
+				this.sync = s;
 			}
 
 			@Override
@@ -58,7 +58,9 @@ public class Proxy extends Service implements Runnable {
 						this.writer.flush();
 					} while (true);
 					System.out.println("close remote");
-					this.socket.close();
+					synchronized (this.sync) {
+						this.sync.notify();
+					}
 				} catch (IOException e) {
 					// handle exception
 				}
@@ -112,12 +114,23 @@ public class Proxy extends Service implements Runnable {
 					}
 				}
 				if (this.remote != null && this.remote.isConnected()) {
+					Object sync = new Object();
+
 					Thread t1 = new Thread(new CopyStream(remoteReader,
-							localWriter, this.remote));
-					t1.start();
+							localWriter, sync));
 					Thread t2 = new Thread(new CopyStream(localReader,
-							remoteWriter, this.remote));
-					t2.start();
+							remoteWriter, sync));
+
+					try {
+						synchronized (sync) {
+							t1.start();
+							t2.start();
+							sync.wait();
+						}
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.println("join");
 					t1.join();
 					t2.join();
 					System.out.println("close local");
