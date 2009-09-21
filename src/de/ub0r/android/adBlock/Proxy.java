@@ -246,6 +246,7 @@ public class Proxy extends Service implements Runnable {
 					t.start();
 				}
 			}
+			sock.close();
 		} catch (IOException e) {
 			e.printStackTrace();
 			Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
