@@ -12,7 +12,7 @@ import android.widget.Button;
  * 
  * @author flx
  */
-public class AdBlock extends Activity {
+public class AdBlock extends Activity implements OnClickListener {
 	/**
 	 * Called when the activity is first created.
 	 * 
@@ -25,22 +25,26 @@ public class AdBlock extends Activity {
 		this.setContentView(R.layout.main);
 
 		((Button) this.findViewById(R.id.start_service))
-				.setOnClickListener(this.runStart);
+				.setOnClickListener(this);
 		((Button) this.findViewById(R.id.stop_service))
-				.setOnClickListener(this.runStop);
+				.setOnClickListener(this);
 	}
 
-	/** OnClickListener. */
-	private OnClickListener runStart = new OnClickListener() {
-		public void onClick(final View v) {
-			AdBlock.this.startService(new Intent(AdBlock.this, Proxy.class));
+	/**
+	 * OnClickListener.
+	 * 
+	 * @param v
+	 *            view
+	 */
+	public final void onClick(final View v) {
+		switch (v.getId()) {
+		case R.id.start_service:
+			this.startService(new Intent(this, Proxy.class));
+			break;
+		case R.id.stop_service:
+			this.stopService(new Intent(this, Proxy.class));
+		default:
+			break;
 		}
-	};
-
-	/** OnClickListener. */
-	private OnClickListener runStop = new OnClickListener() {
-		public void onClick(final View v) {
-			AdBlock.this.stopService(new Intent(AdBlock.this, Proxy.class));
-		}
-	};
+	}
 }
