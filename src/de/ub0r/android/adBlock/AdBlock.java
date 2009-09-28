@@ -6,7 +6,9 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -24,10 +26,18 @@ import android.widget.AdapterView.OnItemClickListener;
 public class AdBlock extends Activity implements OnClickListener,
 		OnItemClickListener {
 
+	/** Preferences: Port. */
+	private static final String PREFS_PORT = "port";
+	/** Preferences: Filter. */
+	private static final String PREFS_FILTER = "filter";
+
 	/** ItemDialog: edit. */
 	private static final short ITEM_DIALOG_EDIT = 0;
 	/** ItemDialog: delete. */
 	private static final short ITEM_DIALOG_DELETE = 1;
+
+	/** Prefs. */
+	private SharedPreferences preferences;
 
 	/** The filter. */
 	private ArrayList<String> filter = new ArrayList<String>();
@@ -48,6 +58,16 @@ public class AdBlock extends Activity implements OnClickListener,
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.main);
 
+		this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		((EditText) this.findViewById(R.id.port)).setText(this.preferences
+				.getString(PREFS_PORT, "8080"));
+		String f = this.preferences.getString(PREFS_FILTER, "");
+		for (String s : f.split("\n")) {
+			if (s.length() > 0) {
+				this.filter.add(s);
+			}
+		}
+
 		((Button) this.findViewById(R.id.start_service))
 				.setOnClickListener(this);
 		((Button) this.findViewById(R.id.stop_service))
@@ -59,6 +79,21 @@ public class AdBlock extends Activity implements OnClickListener,
 		lv.setAdapter(this.adapter);
 		lv.setTextFilterEnabled(true);
 		lv.setOnItemClickListener(this);
+	}
+
+	/** Called on pause. */
+	@Override
+	public final void onPause() {
+		super.onPause();
+		SharedPreferences.Editor editor = this.preferences.edit();
+		editor.putString(PREFS_PORT, ((EditText) this.findViewById(R.id.port))
+				.getText().toString());
+		StringBuilder sb = new StringBuilder();
+		for (String s : this.filter) {
+			sb.append(s + "\n");
+		}
+		editor.putString(PREFS_FILTER, sb.toString());
+		editor.commit();
 	}
 
 	/**

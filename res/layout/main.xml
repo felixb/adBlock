@@ -2,13 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
-
 	<LinearLayout android:layout_width="fill_parent"
 		android:layout_height="wrap_content" android:layout_weight="0">
-		<EditText android:hint="@string/port_" android:text="8080"
-			android:id="@+id/port" android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:layout_marginRight="10sp"
-			android:inputType="number" />
+		<EditText android:hint="@string/port_" android:id="@+id/port"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_marginRight="10sp" android:inputType="number" />
 		<Button android:text="@string/start_" android:id="@+id/start_service"
 			android:layout_width="fill_parent" android:layout_height="wrap_content"
 			android:layout_weight="1" />
@@ -20,16 +18,13 @@
 		android:layout_height="wrap_content" />
 	<ListView android:id="@+id/filter" android:layout_width="fill_parent"
 		android:layout_height="wrap_content" android:layout_weight="1" />
-
 	<LinearLayout android:layout_width="fill_parent"
 		android:layout_height="wrap_content">
-		<EditText android:id="@+id/filter_add" android:layout_width="wrap_content"
-			android:layout_height="wrap_content" android:layout_weight="1" />
+		<EditText android:id="@+id/filter_add" android:inputType="textUri"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:layout_weight="1" />
 		<Button android:text="@string/add_filter" android:id="@+id/filter_add_"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
 			android:layout_weight="0" />
 	</LinearLayout>
-	
-
-
 </LinearLayout>
