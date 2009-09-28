@@ -27,9 +27,9 @@ public class AdBlock extends Activity implements OnClickListener,
 		OnItemClickListener {
 
 	/** Preferences: Port. */
-	private static final String PREFS_PORT = "port";
+	static final String PREFS_PORT = "port";
 	/** Preferences: Filter. */
-	private static final String PREFS_FILTER = "filter";
+	static final String PREFS_FILTER = "filter";
 
 	/** ItemDialog: edit. */
 	private static final short ITEM_DIALOG_EDIT = 0;
@@ -81,10 +81,8 @@ public class AdBlock extends Activity implements OnClickListener,
 		lv.setOnItemClickListener(this);
 	}
 
-	/** Called on pause. */
-	@Override
-	public final void onPause() {
-		super.onPause();
+	/** Save Preferences. */
+	private void savePreferences() {
 		SharedPreferences.Editor editor = this.preferences.edit();
 		editor.putString(PREFS_PORT, ((EditText) this.findViewById(R.id.port))
 				.getText().toString());
@@ -94,6 +92,13 @@ public class AdBlock extends Activity implements OnClickListener,
 		}
 		editor.putString(PREFS_FILTER, sb.toString());
 		editor.commit();
+	}
+
+	/** Called on pause. */
+	@Override
+	public final void onPause() {
+		super.onPause();
+		this.savePreferences();
 	}
 
 	/**
@@ -106,6 +111,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	public final void onClick(final View v) {
 		switch (v.getId()) {
 		case R.id.start_service:
+			this.savePreferences();
 			this.startService(new Intent(this, Proxy.class));
 			break;
 		case R.id.stop_service:
