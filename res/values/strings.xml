@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">AdBlock</string>
-    <string name="port_">Port:</string>
+    <string name="port_">Port</string>
     <string name="start_">Start/Restart</string>
     <string name="stop_">Stop</string>
+    <string name="filter_">Filter:</string>
+    <string name="add_filter">Add filter</string>
 </resources>
