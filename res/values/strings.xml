@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, AdBlock!</string>
     <string name="app_name">AdBlock</string>
+    <string name="port_">Port:</string>
+    <string name="start_">Start/Restart</string>
+    <string name="stop_">Stop</string>
 </resources>
