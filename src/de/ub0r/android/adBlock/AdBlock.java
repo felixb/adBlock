@@ -88,7 +88,9 @@ public class AdBlock extends Activity implements OnClickListener,
 				.getText().toString());
 		StringBuilder sb = new StringBuilder();
 		for (String s : this.filter) {
-			sb.append(s + "\n");
+			if (s.indexOf("admob") < 0) { // won't block admob
+				sb.append(s + "\n");
+			}
 		}
 		editor.putString(PREFS_FILTER, sb.toString());
 		editor.commit();

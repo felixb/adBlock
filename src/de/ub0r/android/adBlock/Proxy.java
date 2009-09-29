@@ -14,7 +14,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -55,8 +54,6 @@ public class Proxy extends Service implements Runnable {
 		private final Socket local;
 		/** Remote Socket. */
 		private Socket remote;
-		/** Context in which the app is running. */
-		private final Context cont;
 
 		/**
 		 * Class to Copy a Stream into an other Stream in a Thread.
@@ -121,9 +118,8 @@ public class Proxy extends Service implements Runnable {
 		 * @param context
 		 *            global Context
 		 */
-		public Connection(final Socket socket, final Context context) {
+		public Connection(final Socket socket) {
 			this.local = socket;
-			this.cont = context;
 		}
 
 		/**
@@ -134,8 +130,10 @@ public class Proxy extends Service implements Runnable {
 		 * @return if URL is blocked?
 		 */
 		private boolean checkURL(final String url) {
+			System.out.println("check url: " + url);
 			for (String f : Proxy.this.filter) {
-				if (url.indexOf(f) > 0) {
+				System.out.println("check filter: " + f);
+				if (url.indexOf(f) >= 0) {
 					System.out.println("block: " + url);
 					System.out.println("match: " + f);
 					return true;
@@ -161,17 +159,19 @@ public class Proxy extends Service implements Runnable {
 					String s;
 					boolean firstLine = true;
 					boolean block = false;
-					String checkHost = null;
+					boolean uncompleteURL = true;
+					String url = null;
 					while (this.remote == null && !block) {
 						s = localReader.readLine();
 						buffer.append(s + "\n");
 						System.out.println(s);
 						if (firstLine) {
-							String url = s.split(" ")[1];
+							url = s.split(" ")[1];
 							if (url.startsWith("http:")) {
-								block = this.checkURL(s);
+								uncompleteURL = false;
+								block = this.checkURL(url);
 							} else {
-								checkHost = url;
+								uncompleteURL = true;
 							}
 							firstLine = false;
 						}
@@ -185,13 +185,13 @@ public class Proxy extends Service implements Runnable {
 										.substring(i + 1));
 								targetHost = targetHost.substring(0, i);
 							}
-							if (checkHost != null) {
-								block = this.checkURL(targetHost + checkHost);
-								if (block) {
-									break;
-								}
+							if (uncompleteURL) {
+								url = targetHost + url;
+								block = this.checkURL(url);
 							}
-
+							if (block) {
+								break;
+							}
 							System.out.println("connect to " + targetHost + " "
 									+ targetPort);
 							this.remote = new Socket();
@@ -231,7 +231,8 @@ public class Proxy extends Service implements Runnable {
 						while (localReader.ready()) {
 							localReader.readLine();
 						}
-						localWriter.append(HTTP_BLOCK + HTTP_RESPONSE);
+						localWriter.append(HTTP_BLOCK + HTTP_RESPONSE
+								+ "BLOCKED by AdBlock!");
 						localWriter.flush();
 						localWriter.close();
 						this.local.close();
@@ -243,7 +244,7 @@ public class Proxy extends Service implements Runnable {
 				} catch (Exception e) {
 					e.printStackTrace();
 					localWriter.append(HTTP_ERROR + " - " + e.toString()
-							+ HTTP_RESPONSE);
+							+ HTTP_RESPONSE + e.toString());
 					localWriter.flush();
 					localWriter.close();
 					this.local.close();
@@ -334,7 +335,7 @@ public class Proxy extends Service implements Runnable {
 				}
 				client = sock.accept();
 				if (client != null) {
-					Thread t = new Thread(new Connection(client, this));
+					Thread t = new Thread(new Connection(client));
 					t.start();
 				}
 			}
