@@ -75,7 +75,7 @@ public class AdBlock extends Activity implements OnClickListener,
 		((Button) this.findViewById(R.id.filter_add_)).setOnClickListener(this);
 		ListView lv = (ListView) this.findViewById(R.id.filter);
 		this.adapter = new ArrayAdapter<String>(this,
-				android.R.layout.simple_list_item_1, this.filter);
+				R.layout.simple_list_item_1, this.filter);
 		lv.setAdapter(this.adapter);
 		lv.setTextFilterEnabled(true);
 		lv.setOnItemClickListener(this);
