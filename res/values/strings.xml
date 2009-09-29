@@ -1,9 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">AdBlock</string>
+	<string name="app_version">0.1</string>
 	<string name="port_">Port</string>
 	<string name="start_">Start/Reload</string>
 	<string name="stop_">Stop</string>
 	<string name="filter_">Filter:</string>
 	<string name="add_filter">Add filter</string>
+	<string name="import_">Import</string>
+	<string name="export_">Export</string>
+	<string name="about_">About</string>
+	<string name="about">AdBlock blocks HTTP requests. It may be used
+		for blocking unwanted ads. Admob is on permanent whitelist!</string>
+	<string name="author_">Author:</string>
+	<string name="author">Felix Bechstein &lt;f@ub0r.de&gt;</string>
+	<string name="license">GPLv3 - see
+		http://www.gnu.org/licenses/gpl-3.0.txt</string>
+	<string name="license_">License:</string>
+	<string name="source">http://repo.or.cz/w/adBlock.git
+	</string>
+	<string name="source_">Sourcescode:</string>
+	<string name="donate_">Donate</string>
+	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=????
+	</string>
 </resources>

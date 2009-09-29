@@ -4,11 +4,15 @@ import java.util.ArrayList;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AdapterView;
@@ -35,6 +39,9 @@ public class AdBlock extends Activity implements OnClickListener,
 	private static final short ITEM_DIALOG_EDIT = 0;
 	/** ItemDialog: delete. */
 	private static final short ITEM_DIALOG_DELETE = 1;
+
+	/** Dialog: about. */
+	private static final int DIALOG_ABOUT = 0;
 
 	/** Prefs. */
 	private SharedPreferences preferences;
@@ -134,6 +141,69 @@ public class AdBlock extends Activity implements OnClickListener,
 		default:
 			break;
 		}
+	}
+
+	/**
+	 * Create menu.
+	 * 
+	 * @param menu
+	 *            menu to inflate
+	 * @return ok/fail?
+	 */
+	@Override
+	public final boolean onCreateOptionsMenu(final Menu menu) {
+		MenuInflater inflater = this.getMenuInflater();
+		inflater.inflate(R.menu.menu, menu);
+		return true;
+	}
+
+	/**
+	 * Handles item selections.
+	 * 
+	 * @param item
+	 *            menu item
+	 * @return done?
+	 */
+	public final boolean onOptionsItemSelected(final MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.item_about: // start about dialog
+			this.showDialog(DIALOG_ABOUT);
+			return true;
+		case R.id.item_import:
+			// TODO: import
+			return true;
+		case R.id.item_export:
+			// TODO: export
+			return true;
+		default:
+			return false;
+		}
+	}
+
+	/**
+	 * Called to create dialog.
+	 * 
+	 * @param id
+	 *            Dialog id
+	 * @return dialog
+	 */
+	@Override
+	protected final Dialog onCreateDialog(final int id) {
+		Dialog myDialog;
+		switch (id) {
+		case DIALOG_ABOUT:
+			myDialog = new Dialog(this);
+			myDialog.setContentView(R.layout.about);
+			myDialog.setTitle(this.getResources().getString(R.string.about_)
+					+ " v"
+					+ this.getResources().getString(R.string.app_version));
+			// ((Button) myDialog.findViewById(R.id.btn_donate))
+			// .setOnClickListener(this);
+			break;
+		default:
+			myDialog = null;
+		}
+		return myDialog;
 	}
 
 	/**
