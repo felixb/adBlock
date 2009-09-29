@@ -1,5 +1,16 @@
 package de.ub0r.android.adBlock;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -8,6 +19,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.view.Menu;
@@ -20,6 +32,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 /**
@@ -34,6 +47,11 @@ public class AdBlock extends Activity implements OnClickListener,
 	static final String PREFS_PORT = "port";
 	/** Preferences: Filter. */
 	static final String PREFS_FILTER = "filter";
+	/** Preferences: import url. */
+	private static final String PREFS_IMPORT_URL = "importurl";
+
+	/** Filename for export of filter. */
+	private static final String FILENAME_EXPORT = "/sdcard/filter.txt";
 
 	/** ItemDialog: edit. */
 	private static final short ITEM_DIALOG_EDIT = 0;
@@ -42,9 +60,13 @@ public class AdBlock extends Activity implements OnClickListener,
 
 	/** Dialog: about. */
 	private static final int DIALOG_ABOUT = 0;
+	/** Dialog: import. */
+	private static final int DIALOG_IMPORT = 1;
 
 	/** Prefs. */
 	private SharedPreferences preferences;
+	/** Prefs. import URL. */
+	private String importUrl = null;
 
 	/** The filter. */
 	private ArrayList<String> filter = new ArrayList<String>();
@@ -53,6 +75,55 @@ public class AdBlock extends Activity implements OnClickListener,
 
 	/** Editmode? */
 	private int itemToEdit = -1;
+
+	private class Importer extends AsyncTask<String, Boolean, Boolean> {
+		private String message = "";
+
+		@Override
+		protected final Boolean doInBackground(final String... dummy) {
+			try {
+				HttpURLConnection c = (HttpURLConnection) (new URL(
+						AdBlock.this.importUrl)).openConnection();
+				int resp = c.getResponseCode();
+				if (resp != 200) {
+					return false;
+				}
+				BufferedReader reader = new BufferedReader(
+						new InputStreamReader(c.getInputStream()));
+				AdBlock.this.filter.clear();
+				while (true) {
+					String s = reader.readLine();
+					if (s == null) {
+						break;
+					} else if (s.length() > 0) {
+						AdBlock.this.filter.add(s);
+					}
+				}
+				reader.close();
+				return true;
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+				this.message = e.toString();
+				return false;
+			} catch (IOException e) {
+				this.message = e.toString();
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		@Override
+		protected final void onPostExecute(final Boolean result) {
+			if (result.booleanValue()) {
+				Toast.makeText(AdBlock.this, "imported", Toast.LENGTH_LONG)
+						.show();
+				AdBlock.this.adapter.notifyDataSetChanged();
+			} else {
+				Toast.makeText(AdBlock.this, "failed: " + this.message,
+						Toast.LENGTH_LONG).show();
+			}
+		}
+	}
 
 	/**
 	 * Called when the activity is first created.
@@ -74,6 +145,7 @@ public class AdBlock extends Activity implements OnClickListener,
 				this.filter.add(s);
 			}
 		}
+		this.importUrl = this.preferences.getString(PREFS_IMPORT_URL, "");
 
 		((Button) this.findViewById(R.id.start_service))
 				.setOnClickListener(this);
@@ -100,6 +172,7 @@ public class AdBlock extends Activity implements OnClickListener,
 			}
 		}
 		editor.putString(PREFS_FILTER, sb.toString());
+		editor.putString(PREFS_IMPORT_URL, this.importUrl);
 		editor.commit();
 	}
 
@@ -138,6 +211,15 @@ public class AdBlock extends Activity implements OnClickListener,
 				this.adapter.notifyDataSetChanged();
 			}
 			break;
+		case R.id.cancel:
+			this.dismissDialog(DIALOG_IMPORT);
+			break;
+		case R.id.ok:
+			this.dismissDialog(DIALOG_IMPORT);
+			this.importUrl = ((EditText) v.getRootView().findViewById(
+					R.id.import_url)).getText().toString();
+			new Importer().execute((String[]) null);
+			break;
 		default:
 			break;
 		}
@@ -170,10 +252,33 @@ public class AdBlock extends Activity implements OnClickListener,
 			this.showDialog(DIALOG_ABOUT);
 			return true;
 		case R.id.item_import:
-			// TODO: import
+			this.showDialog(DIALOG_IMPORT);
 			return true;
 		case R.id.item_export:
-			// TODO: export
+			try {
+				// OutputStream os = this.openFileOutput(FILENAME_EXPORT,
+				// MODE_WORLD_READABLE);
+				File file = new File(FILENAME_EXPORT);
+				if (!file.createNewFile()) {
+					file.delete();
+					file.createNewFile();
+				}
+				OutputStream os = new FileOutputStream(file);
+				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+						os));
+				for (String s : this.filter) {
+					if (s.indexOf("admob") < 0) { // won't block admob
+						bw.append(s + "\n");
+					}
+				}
+				bw.close();
+				os.close();
+				Toast.makeText(this, "exported to " + FILENAME_EXPORT,
+						Toast.LENGTH_LONG).show();
+			} catch (IOException e) {
+				e.printStackTrace();
+				Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+			}
 			return true;
 		default:
 			return false;
@@ -200,6 +305,17 @@ public class AdBlock extends Activity implements OnClickListener,
 			// ((Button) myDialog.findViewById(R.id.btn_donate))
 			// .setOnClickListener(this);
 			break;
+		case DIALOG_IMPORT:
+			myDialog = new Dialog(this);
+			myDialog.setContentView(R.layout.import_url);
+			myDialog.setTitle(this.getResources().getString(
+					R.string.import_url_));
+			((EditText) myDialog.findViewById(R.id.import_url))
+					.setText(this.importUrl);
+			((Button) myDialog.findViewById(R.id.ok)).setOnClickListener(this);
+			((Button) myDialog.findViewById(R.id.cancel))
+					.setOnClickListener(this);
+			break;
 		default:
 			myDialog = null;
 		}
@@ -223,7 +339,6 @@ public class AdBlock extends Activity implements OnClickListener,
 			final int position, final long id) {
 
 		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		// builder.setTitle("Pick a color");
 		builder.setItems(
 				this.getResources().getStringArray(R.array.itemDialog),
 				new DialogInterface.OnClickListener() {

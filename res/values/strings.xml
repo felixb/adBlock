@@ -8,6 +8,7 @@
 	<string name="filter_">Filter:</string>
 	<string name="add_filter">Add filter</string>
 	<string name="import_">Import</string>
+	<string name="import_url_">Import URL?</string>
 	<string name="export_">Export</string>
 	<string name="about_">About</string>
 	<string name="about">AdBlock blocks HTTP requests. It may be used
