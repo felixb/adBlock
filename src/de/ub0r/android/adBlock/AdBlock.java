@@ -310,8 +310,6 @@ public class AdBlock extends Activity implements OnClickListener,
 			myDialog.setContentView(R.layout.import_url);
 			myDialog.setTitle(this.getResources().getString(
 					R.string.import_url_));
-			((EditText) myDialog.findViewById(R.id.import_url))
-					.setText(this.importUrl);
 			((Button) myDialog.findViewById(R.id.ok)).setOnClickListener(this);
 			((Button) myDialog.findViewById(R.id.cancel))
 					.setOnClickListener(this);
@@ -320,6 +318,28 @@ public class AdBlock extends Activity implements OnClickListener,
 			myDialog = null;
 		}
 		return myDialog;
+	}
+
+	/**
+	 * Provides an opportunity to prepare a managed dialog before it is being
+	 * shown.
+	 * 
+	 * @param id
+	 *            The id of the managed dialog.
+	 * @param dialog
+	 *            The dialog.
+	 */
+	@Override
+	protected final void onPrepareDialog(final int id, final Dialog dialog) {
+		super.onPrepareDialog(id, dialog);
+		switch (id) {
+		case DIALOG_IMPORT:
+			((EditText) dialog.findViewById(R.id.import_url))
+					.setText(this.importUrl);
+			break;
+		default:
+			break;
+		}
 	}
 
 	/**
