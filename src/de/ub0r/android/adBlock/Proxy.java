@@ -37,7 +37,10 @@ import android.preference.PreferenceManager;
 import android.widget.Toast;
 
 /**
- * @author flx
+ * This ad blocking Proxy Service will work as an ordinary HTTP proxy. Set APN's
+ * proxy preferences to proxy's connection parameters.
+ * 
+ * @author Felix Bechstein
  */
 public class Proxy extends Service implements Runnable {
 
@@ -60,9 +63,9 @@ public class Proxy extends Service implements Runnable {
 	private boolean stop = false;
 
 	/**
-	 * Class to handle a single proxy connection.
+	 * Connection handles a single HTTP Connection. Run this as a Thread.
 	 * 
-	 * @author flx
+	 * @author Felix Bechstein
 	 */
 	private class Connection implements Runnable {
 
@@ -72,9 +75,10 @@ public class Proxy extends Service implements Runnable {
 		private Socket remote;
 
 		/**
-		 * Class to Copy a Stream into an other Stream in a Thread.
+		 * CopyStream reads one stream and writes it's data into an other
+		 * stream. Run this as a Thread.
 		 * 
-		 * @author flx
+		 * @author Felix Bechstein
 		 */
 		private class CopyStream implements Runnable {
 			/** Reader. */
@@ -316,6 +320,9 @@ public class Proxy extends Service implements Runnable {
 	@Override
 	public final void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
+
+		// Don't kill me!
+		this.setForeground(true);
 
 		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);

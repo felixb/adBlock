@@ -54,9 +54,9 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 /**
- * Main Activity to controle ad blocking proxy.
+ * Main Activity to control ad blocking Proxy.
  * 
- * @author flx
+ * @author Felix Bechstein
  */
 public class AdBlock extends Activity implements OnClickListener,
 		OnItemClickListener {
@@ -95,6 +95,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	private int itemToEdit = -1;
 
 	private class Importer extends AsyncTask<String, Boolean, Boolean> {
+		/** Error message. */
 		private String message = "";
 
 		@Override
