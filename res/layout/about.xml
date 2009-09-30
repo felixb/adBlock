@@ -20,10 +20,12 @@
 	android:orientation="vertical" android:layout_width="fill_parent"
 	android:layout_height="fill_parent">
 
-	<TextView android:text="@string/about" android:layout_width="wrap_content"
+	<TextView android:text="@string/about0" android:layout_width="wrap_content"
 		android:layout_height="wrap_content" android:paddingLeft="5sp"
 		android:paddingRight="5sp" android:autoLink="web" />
-
+	<TextView android:text="@string/about1" android:layout_width="wrap_content"
+		android:layout_height="wrap_content" android:paddingLeft="5sp"
+		android:paddingRight="5sp" android:autoLink="web" />
 	<TextView android:text="@string/license_"
 		android:layout_width="wrap_content" android:layout_height="wrap_content"
 		android:paddingTop="5sp" android:paddingLeft="5sp" />

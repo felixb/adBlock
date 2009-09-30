@@ -28,8 +28,12 @@
 	<string name="import_url_">Import URL?</string>
 	<string name="export_">Export</string>
 	<string name="about_">About</string>
-	<string name="about">AdBlock blocks HTTP requests. It may be used
-		for blocking unwanted ads. Admob is on permanent whitelist!</string>
+	<string name="about0">AdBlock blocks HTTP requests. It may be used
+		for blocking unwanted ads. Admob is on permanent whitelist!
+	</string>
+	<string name="about1">Set APN`s proxy preferences to localhost with
+		the port set in main application.
+	</string>
 	<string name="author_">Author:</string>
 	<string name="author">Felix Bechstein &lt;f@ub0r.de&gt;</string>
 	<string name="license">GPLv3 - see
