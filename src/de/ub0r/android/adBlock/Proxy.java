@@ -21,7 +21,9 @@ package de.ub0r.android.adBlock;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
@@ -82,11 +84,13 @@ public class Proxy extends Service implements Runnable {
 		 */
 		private class CopyStream implements Runnable {
 			/** Reader. */
-			private final BufferedReader reader;
+			private final InputStream reader;
 			/** Writer. */
-			private final BufferedWriter writer;
+			private final OutputStream writer;
 			/** Object to notify with at EOF. */
 			private final Object sync;
+			/** Size of buffer. */
+			private static final short BUFFSIZE = 1024;
 
 			/**
 			 * Constructor.
@@ -98,7 +102,7 @@ public class Proxy extends Service implements Runnable {
 			 * @param s
 			 *            object to sync with
 			 */
-			public CopyStream(final BufferedReader r, final BufferedWriter w,
+			public CopyStream(final InputStream r, final OutputStream w,
 					final Object s) {
 				this.reader = r;
 				this.writer = w;
@@ -111,15 +115,16 @@ public class Proxy extends Service implements Runnable {
 			@Override
 			public void run() {
 				try {
-					String s;
-					do {
-						s = this.reader.readLine();
-						if (s == null) {
+					byte[] buf = new byte[BUFFSIZE];
+					int read = -1;
+					while (true) {
+						read = this.reader.read(buf);
+						if (read < 0) {
 							break;
 						}
-						this.writer.append(s + "\n");
+						this.writer.write(buf, 0, read);
 						this.writer.flush();
-					} while (true);
+					}
 					System.out.println("close remote");
 					synchronized (this.sync) {
 						this.sync.notify();
@@ -164,13 +169,15 @@ public class Proxy extends Service implements Runnable {
 		@Override
 		public void run() {
 			try {
+				InputStream localInputStream = this.local.getInputStream();
+				OutputStream localOutputStream = this.local.getOutputStream();
 				BufferedReader localReader = new BufferedReader(
-						new InputStreamReader(this.local.getInputStream()));
+						new InputStreamReader(localInputStream));
 				BufferedWriter localWriter = new BufferedWriter(
-						new OutputStreamWriter(this.local.getOutputStream()));
+						new OutputStreamWriter(localOutputStream));
 				try {
-					BufferedReader remoteReader = null;
-					BufferedWriter remoteWriter = null;
+					InputStream remoteInputStream = null;
+					OutputStream remoteOutputStream = null;
 					StringBuilder buffer = new StringBuilder();
 					String s;
 					boolean firstLine = true;
@@ -234,24 +241,25 @@ public class Proxy extends Service implements Runnable {
 							this.remote = new Socket();
 							this.remote.connect(new InetSocketAddress(
 									targetHost, targetPort));
-							remoteReader = new BufferedReader(
-									new InputStreamReader(this.remote
-											.getInputStream()));
-							remoteWriter = new BufferedWriter(
-									new OutputStreamWriter(this.remote
-											.getOutputStream()));
+							remoteInputStream = this.remote.getInputStream();
+							remoteOutputStream = this.remote.getOutputStream();
+							BufferedWriter remoteWriter = new BufferedWriter(
+									new OutputStreamWriter(remoteOutputStream));
 							remoteWriter.append(buffer);
 							remoteWriter.flush();
 							buffer = null;
+							// remoteWriter.close();
 						}
 					}
 					if (this.remote != null && this.remote.isConnected()) {
 						Object sync = new Object();
-
-						Thread t1 = new Thread(new CopyStream(remoteReader,
-								localWriter, sync));
-						Thread t2 = new Thread(new CopyStream(localReader,
-								remoteWriter, sync));
+						localWriter.flush();
+						localOutputStream.flush();
+						remoteOutputStream.flush();
+						Thread t1 = new Thread(new CopyStream(
+								remoteInputStream, localOutputStream, sync));
+						Thread t2 = new Thread(new CopyStream(localInputStream,
+								remoteOutputStream, sync));
 						try {
 							synchronized (sync) {
 								t1.start();
@@ -261,9 +269,22 @@ public class Proxy extends Service implements Runnable {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
+						// localInputStream.close();
+						// localOutputStream.close();
+						// remoteInputStream.close();
+						// remoteOutputStream.close();
+						this.remote.close();
+						this.local.close();
+						// if (t1.isAlive()) {
+						// t1.interrupt();
+						// }
+						// if (t2.isAlive()) {
+						// t2.interrupt();
+						// }
+						// System.out.println("closed local & remote");
 						t1.join();
 						t2.join();
-						this.local.close();
+						// System.out.println("joined");
 					} else if (block) {
 						while (localReader.ready()) {
 							localReader.readLine();
