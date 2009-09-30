@@ -150,12 +150,8 @@ public class Proxy extends Service implements Runnable {
 		 * @return if URL is blocked?
 		 */
 		private boolean checkURL(final String url) {
-			System.out.println("check url: " + url);
 			for (String f : Proxy.this.filter) {
-				System.out.println("check filter: " + f);
 				if (url.indexOf(f) >= 0) {
-					System.out.println("block: " + url);
-					System.out.println("match: " + f);
 					return true;
 				}
 			}
