@@ -125,12 +125,11 @@ public class Proxy extends Service implements Runnable {
 						this.writer.write(buf, 0, read);
 						this.writer.flush();
 					}
-					System.out.println("close remote");
 					synchronized (this.sync) {
 						this.sync.notify();
 					}
 				} catch (IOException e) {
-					// handle exception
+					e.printStackTrace();
 				}
 			}
 		}
@@ -172,9 +171,11 @@ public class Proxy extends Service implements Runnable {
 				InputStream localInputStream = this.local.getInputStream();
 				OutputStream localOutputStream = this.local.getOutputStream();
 				BufferedReader localReader = new BufferedReader(
-						new InputStreamReader(localInputStream));
+						new InputStreamReader(localInputStream),
+						CopyStream.BUFFSIZE);
 				BufferedWriter localWriter = new BufferedWriter(
-						new OutputStreamWriter(localOutputStream));
+						new OutputStreamWriter(localOutputStream),
+						CopyStream.BUFFSIZE);
 				try {
 					InputStream remoteInputStream = null;
 					OutputStream remoteOutputStream = null;
@@ -191,6 +192,9 @@ public class Proxy extends Service implements Runnable {
 						buffer.append(s + "\n");
 						System.out.println(s);
 						if (firstLine) {
+							if (s.startsWith("CONNECT ")) {
+								// TODO: handle https
+							}
 							url = s.split(" ")[1];
 							if (url.startsWith("http:")) {
 								uncompleteURL = false;
@@ -244,7 +248,8 @@ public class Proxy extends Service implements Runnable {
 							remoteInputStream = this.remote.getInputStream();
 							remoteOutputStream = this.remote.getOutputStream();
 							BufferedWriter remoteWriter = new BufferedWriter(
-									new OutputStreamWriter(remoteOutputStream));
+									new OutputStreamWriter(remoteOutputStream),
+									CopyStream.BUFFSIZE);
 							remoteWriter.append(buffer);
 							remoteWriter.flush();
 							buffer = null;
@@ -269,22 +274,14 @@ public class Proxy extends Service implements Runnable {
 						} catch (InterruptedException e) {
 							e.printStackTrace();
 						}
-						// localInputStream.close();
-						// localOutputStream.close();
-						// remoteInputStream.close();
-						// remoteOutputStream.close();
+						this.local.shutdownInput();
+						this.remote.shutdownInput();
+						this.local.shutdownOutput();
+						this.remote.shutdownOutput();
 						this.remote.close();
 						this.local.close();
-						// if (t1.isAlive()) {
-						// t1.interrupt();
-						// }
-						// if (t2.isAlive()) {
-						// t2.interrupt();
-						// }
-						// System.out.println("closed local & remote");
 						t1.join();
 						t2.join();
-						// System.out.println("joined");
 					} else if (block) {
 						while (localReader.ready()) {
 							localReader.readLine();
