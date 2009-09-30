@@ -339,8 +339,8 @@ public class Proxy extends Service implements Runnable {
 			}
 		}
 		if (this.proxy == null) {
-			Toast.makeText(this, "starting proxy on port: " + this.port,
-					Toast.LENGTH_SHORT).show();
+			// Toast.makeText(this, "starting proxy on port: " + this.port,
+			// Toast.LENGTH_SHORT).show();
 			this.proxy = new Thread(this);
 			this.proxy.start();
 		} else {
