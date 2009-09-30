@@ -11,6 +11,7 @@ import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 
 import android.app.Service;
@@ -161,6 +162,8 @@ public class Proxy extends Service implements Runnable {
 					boolean block = false;
 					boolean uncompleteURL = true;
 					String url = null;
+					String targetHost = null;
+					int targetPort = -1;
 					while (this.remote == null && !block) {
 						s = localReader.readLine();
 						buffer.append(s + "\n");
@@ -177,8 +180,8 @@ public class Proxy extends Service implements Runnable {
 						}
 						if (!block && s.startsWith("Host:")) {
 							// init remote socket
-							int targetPort = 80;
-							String targetHost = s.substring(6).trim();
+							targetPort = 80;
+							targetHost = s.substring(6).trim();
 							int i = targetHost.indexOf(':');
 							if (i > 0) {
 								targetPort = Integer.parseInt(targetHost
@@ -192,6 +195,25 @@ public class Proxy extends Service implements Runnable {
 							if (block) {
 								break;
 							}
+						} else if (!block && s.length() == 0) { // end of header
+							if (url.startsWith("http")) {
+								URL u = new URL(url);
+								targetHost = u.getHost();
+								targetPort = u.getPort();
+								if (targetPort < 0) {
+									targetPort = 80;
+								}
+							} else {
+								localWriter.append(HTTP_ERROR
+										+ " - PROTOCOL ERROR" + HTTP_RESPONSE
+										+ "PROTOCOL ERROR");
+								localWriter.flush();
+								localWriter.close();
+								this.local.close();
+								break;
+							}
+						}
+						if (targetHost != null && targetPort > 0) {
 							System.out.println("connect to " + targetHost + " "
 									+ targetPort);
 							this.remote = new Socket();
@@ -206,6 +228,7 @@ public class Proxy extends Service implements Runnable {
 							remoteWriter.append(buffer);
 							remoteWriter.flush();
 							buffer = null;
+
 						}
 					}
 					if (this.remote != null && this.remote.isConnected()) {
