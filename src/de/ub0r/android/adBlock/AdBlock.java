@@ -40,6 +40,7 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -60,6 +61,9 @@ import android.widget.AdapterView.OnItemClickListener;
  */
 public class AdBlock extends Activity implements OnClickListener,
 		OnItemClickListener {
+
+	/** Tag for output. */
+	private final String TAG = "AdBlock";
 
 	/** Preferences: Port. */
 	static final String PREFS_PORT = "port";
@@ -121,12 +125,12 @@ public class AdBlock extends Activity implements OnClickListener,
 				reader.close();
 				return true;
 			} catch (MalformedURLException e) {
-				e.printStackTrace();
+				Log.e(AdBlock.this.TAG, null, e);
 				this.message = e.toString();
 				return false;
 			} catch (IOException e) {
 				this.message = e.toString();
-				e.printStackTrace();
+				Log.e(AdBlock.this.TAG, null, e);
 				return false;
 			}
 		}
@@ -295,7 +299,7 @@ public class AdBlock extends Activity implements OnClickListener,
 				Toast.makeText(this, "exported to " + FILENAME_EXPORT,
 						Toast.LENGTH_LONG).show();
 			} catch (IOException e) {
-				e.printStackTrace();
+				Log.e(this.TAG, null, e);
 				Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
 			}
 			return true;

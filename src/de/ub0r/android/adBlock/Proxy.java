@@ -36,6 +36,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.widget.Toast;
 
 /**
@@ -63,6 +64,9 @@ public class Proxy extends Service implements Runnable {
 	private ArrayList<String> filter = new ArrayList<String>();
 	/** Stop proxy? */
 	private boolean stop = false;
+
+	/** Tag for output. */
+	private static final String TAG = "AdBlock.Proxy";
 
 	/**
 	 * Connection handles a single HTTP Connection. Run this as a Thread.
@@ -129,7 +133,7 @@ public class Proxy extends Service implements Runnable {
 						this.sync.notify();
 					}
 				} catch (IOException e) {
-					e.printStackTrace();
+					Log.e(TAG, null, e);
 				}
 			}
 		}
@@ -184,19 +188,27 @@ public class Proxy extends Service implements Runnable {
 					boolean firstLine = true;
 					boolean block = false;
 					boolean uncompleteURL = true;
+					boolean connectHTTPS = false;
 					String url = null;
 					String targetHost = null;
 					int targetPort = -1;
 					while (this.remote == null && !block) {
 						s = localReader.readLine();
 						buffer.append(s + "\n");
-						System.out.println(s);
+						Log.v(TAG, s);
 						if (firstLine) {
-							if (s.startsWith("CONNECT ")) {
-								// TODO: handle https
-							}
 							url = s.split(" ")[1];
-							if (url.startsWith("http:")) {
+							if (s.startsWith("CONNECT ")) {
+								targetPort = 443;
+								targetHost = url;
+								int i = targetHost.indexOf(':');
+								if (i > 0) {
+									targetPort = Integer.parseInt(targetHost
+											.substring(i + 1));
+									targetHost = targetHost.substring(0, i);
+								}
+								connectHTTPS = true;
+							} else if (url.startsWith("http:")) {
 								uncompleteURL = false;
 								block = this.checkURL(url);
 							} else {
@@ -240,20 +252,27 @@ public class Proxy extends Service implements Runnable {
 							}
 						}
 						if (targetHost != null && targetPort > 0) {
-							System.out.println("connect to " + targetHost + " "
+							Log.v(TAG, "connect to " + targetHost + " "
 									+ targetPort);
 							this.remote = new Socket();
 							this.remote.connect(new InetSocketAddress(
 									targetHost, targetPort));
 							remoteInputStream = this.remote.getInputStream();
 							remoteOutputStream = this.remote.getOutputStream();
-							BufferedWriter remoteWriter = new BufferedWriter(
-									new OutputStreamWriter(remoteOutputStream),
-									CopyStream.BUFFSIZE);
-							remoteWriter.append(buffer);
-							remoteWriter.flush();
+							if (connectHTTPS) {
+								localWriter.write(HTTP_CONNECTED
+										+ HTTP_RESPONSE);
+							} else {
+								BufferedWriter remoteWriter = new BufferedWriter(
+										new OutputStreamWriter(
+												remoteOutputStream),
+										CopyStream.BUFFSIZE);
+								remoteWriter.append(buffer);
+								remoteWriter.flush();
+							}
 							buffer = null;
-							// remoteWriter.close();
+							// remoteWriter.close(); // writer.close() will
+							// close underlying socket!
 						}
 					}
 					if (this.remote != null && this.remote.isConnected()) {
@@ -272,7 +291,7 @@ public class Proxy extends Service implements Runnable {
 								sync.wait();
 							}
 						} catch (InterruptedException e) {
-							e.printStackTrace();
+							Log.e(TAG, null, e);
 						}
 						this.local.shutdownInput();
 						this.remote.shutdownInput();
@@ -297,7 +316,7 @@ public class Proxy extends Service implements Runnable {
 				} catch (NullPointerException e) {
 					// do nothing
 				} catch (Exception e) {
-					e.printStackTrace();
+					Log.e(TAG, null, e);
 					localWriter.append(HTTP_ERROR + " - " + e.toString()
 							+ HTTP_RESPONSE + e.toString());
 					localWriter.flush();
@@ -305,7 +324,7 @@ public class Proxy extends Service implements Runnable {
 					this.local.close();
 				}
 			} catch (IOException e1) {
-				// nothing
+				Log.e(TAG, null, e1);
 			}
 		}
 	}
@@ -399,7 +418,7 @@ public class Proxy extends Service implements Runnable {
 			}
 			sock.close();
 		} catch (IOException e) {
-			e.printStackTrace();
+			Log.e(TAG, null, e);
 		}
 	}
 }
