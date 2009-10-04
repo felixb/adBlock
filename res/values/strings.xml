@@ -18,7 +18,7 @@
 	-->
 <resources>
 	<string name="app_name">AdBlock</string>
-	<string name="app_version">0.1</string>
+	<string name="app_version">0.0.2</string>
 	<string name="port_">Port:</string>
 	<string name="start_">Start/Reload</string>
 	<string name="stop_">Stop</string>
