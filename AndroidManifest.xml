@@ -20,7 +20,8 @@
 	package="de.ub0r.android.adBlock" android:versionName="0.0.1"
 	android:versionCode="1">
 	<application android:icon="@drawable/icon" android:label="@string/app_name"
-		android:debuggable="true">
+		android:debuggable="true" android:configChanges="orientation"
+		android:windowSoftInputMode="adjustResize">
 		<activity android:name=".AdBlock" android:label="@string/app_name">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
