@@ -21,9 +21,11 @@
 	android:layout_height="fill_parent">
 	<LinearLayout android:layout_width="fill_parent"
 		android:layout_height="wrap_content" android:layout_weight="0">
-		<EditText android:hint="@string/port_" android:id="@+id/port"
+		<TextView android:text="@string/port_" android:layout_width="wrap_content" android:layout_height="wrap_content"	 />
+		<EditText android:id="@+id/port"
 			android:layout_width="wrap_content" android:layout_height="wrap_content"
-			android:layout_marginRight="10sp" android:inputType="number" />
+			android:layout_marginLeft="5dip"
+			android:layout_marginRight="10dip" android:inputType="number" />
 		<Button android:text="@string/start_" android:id="@+id/start_service"
 			android:layout_width="fill_parent" android:layout_height="wrap_content"
 			android:layout_weight="1" />

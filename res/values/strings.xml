@@ -19,7 +19,7 @@
 <resources>
 	<string name="app_name">AdBlock</string>
 	<string name="app_version">0.1</string>
-	<string name="port_">Port</string>
+	<string name="port_">Port:</string>
 	<string name="start_">Start/Reload</string>
 	<string name="stop_">Stop</string>
 	<string name="filter_">Filter:</string>
@@ -29,11 +29,15 @@
 	<string name="export_">Export</string>
 	<string name="about_">About</string>
 	<string name="about0">AdBlock blocks HTTP requests. It may be used
-		for blocking unwanted ads. Admob is on permanent whitelist!
+		for blocking unwanted ads on webpages.
+		It will NOT block ads in apps.
+		Admob and Google is on permanent whitelist!
 	</string>
 	<string name="about1">Set APN`s proxy preferences to localhost with
 		the port set in main application.
 	</string>
+	<string name="about2">Dear Google, please contact me before delete
+		this app from market.</string>
 	<string name="author_">Author:</string>
 	<string name="author">Felix Bechstein &lt;f@ub0r.de&gt;</string>
 	<string name="license">GPLv3 - see
@@ -43,7 +47,7 @@
 	</string>
 	<string name="source_">Sourcescode:</string>
 	<string name="donate_">Donate</string>
-	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=????
+	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=8668940
 	</string>
 	<string-array name="itemDialog">
 		<item>Edit</item>

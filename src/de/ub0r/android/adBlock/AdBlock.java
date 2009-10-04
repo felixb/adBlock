@@ -19,13 +19,8 @@
 package de.ub0r.android.adBlock;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -37,6 +32,7 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -243,6 +239,10 @@ public class AdBlock extends Activity implements OnClickListener,
 					R.id.import_url)).getText().toString();
 			new Importer().execute((String[]) null);
 			break;
+		case R.id.btn_donate:
+			Uri uri = Uri.parse(this.getString(R.string.donate_url));
+			this.startActivity(new Intent(Intent.ACTION_VIEW, uri));
+			break;
 		default:
 			break;
 		}
@@ -277,32 +277,32 @@ public class AdBlock extends Activity implements OnClickListener,
 		case R.id.item_import:
 			this.showDialog(DIALOG_IMPORT);
 			return true;
-		case R.id.item_export:
-			try {
-				// OutputStream os = this.openFileOutput(FILENAME_EXPORT,
-				// MODE_WORLD_READABLE);
-				File file = new File(FILENAME_EXPORT);
-				if (!file.createNewFile()) {
-					file.delete();
-					file.createNewFile();
-				}
-				OutputStream os = new FileOutputStream(file);
-				BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
-						os));
-				for (String s : this.filter) {
-					if (s.indexOf("admob") < 0) { // won't block admob
-						bw.append(s + "\n");
-					}
-				}
-				bw.close();
-				os.close();
-				Toast.makeText(this, "exported to " + FILENAME_EXPORT,
-						Toast.LENGTH_LONG).show();
-			} catch (IOException e) {
-				Log.e(this.TAG, null, e);
-				Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
-			}
-			return true;
+			// case R.id.item_export:
+			// try {
+			// // OutputStream os = this.openFileOutput(FILENAME_EXPORT,
+			// // MODE_WORLD_READABLE);
+			// File file = new File(FILENAME_EXPORT);
+			// if (!file.createNewFile()) {
+			// file.delete();
+			// file.createNewFile();
+			// }
+			// OutputStream os = new FileOutputStream(file);
+			// BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
+			// os));
+			// for (String s : this.filter) {
+			// if (s.indexOf("admob") < 0) { // won't block admob
+			// bw.append(s + "\n");
+			// }
+			// }
+			// bw.close();
+			// os.close();
+			// Toast.makeText(this, "exported to " + FILENAME_EXPORT,
+			// Toast.LENGTH_LONG).show();
+			// } catch (IOException e) {
+			// Log.e(this.TAG, null, e);
+			// Toast.makeText(this, e.toString(), Toast.LENGTH_LONG).show();
+			// }
+			// return true;
 		default:
 			return false;
 		}
@@ -325,8 +325,8 @@ public class AdBlock extends Activity implements OnClickListener,
 			myDialog.setTitle(this.getResources().getString(R.string.about_)
 					+ " v"
 					+ this.getResources().getString(R.string.app_version));
-			// ((Button) myDialog.findViewById(R.id.btn_donate))
-			// .setOnClickListener(this);
+			((Button) myDialog.findViewById(R.id.btn_donate))
+					.setOnClickListener(this);
 			break;
 		case DIALOG_IMPORT:
 			myDialog = new Dialog(this);
