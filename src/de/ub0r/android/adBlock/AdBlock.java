@@ -69,8 +69,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	private static final String PREFS_IMPORT_URL = "importurl";
 
 	/** Filename for export of filter. */
-	private static final String FILENAME_EXPORT = "/sdcard/filter.txt";
-
+	// private static final String FILENAME_EXPORT = "/sdcard/filter.txt";
 	/** ItemDialog: edit. */
 	private static final short ITEM_DIALOG_EDIT = 0;
 	/** ItemDialog: delete. */
@@ -94,10 +93,21 @@ public class AdBlock extends Activity implements OnClickListener,
 	/** Editmode? */
 	private int itemToEdit = -1;
 
+	/**
+	 * Import filter from URL on background.
+	 * 
+	 * @author Felix Bechstein
+	 */
 	private class Importer extends AsyncTask<String, Boolean, Boolean> {
 		/** Error message. */
 		private String message = "";
 
+		/**
+		 * Do the work.
+		 * 
+		 * @param dummy
+		 *            nothing here
+		 */
 		@Override
 		protected final Boolean doInBackground(final String... dummy) {
 			try {
@@ -131,6 +141,12 @@ public class AdBlock extends Activity implements OnClickListener,
 			}
 		}
 
+		/**
+		 * Merge imported filter to the real one.
+		 * 
+		 * @param result
+		 *            nothing here
+		 */
 		@Override
 		protected final void onPostExecute(final Boolean result) {
 			if (result.booleanValue()) {
