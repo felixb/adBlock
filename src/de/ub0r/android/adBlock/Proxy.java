@@ -267,6 +267,11 @@ public class Proxy extends Service implements Runnable {
 										new OutputStreamWriter(
 												remoteOutputStream),
 										CopyStream.BUFFSIZE);
+								while (localReader.ready()) {
+									buffer
+											.append(localReader.readLine()
+													+ "\n");
+								}
 								remoteWriter.append(buffer);
 								remoteWriter.flush();
 							}
