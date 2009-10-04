@@ -16,42 +16,45 @@
 		copy of the GNU General Public License along with this program; If
 		not, see <http://www.gnu.org/licenses/>.
 	-->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-	android:orientation="vertical" android:layout_width="fill_parent"
-	android:layout_height="fill_parent">
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent" android:layout_height="fill_parent">
+	<LinearLayout android:orientation="vertical"
+		android:layout_width="fill_parent" android:layout_height="fill_parent">
 
-	<TextView android:text="@string/about0" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="5dip"
-		android:paddingRight="5dip" />
-	<TextView android:text="@string/about1" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="5dip"
-		android:paddingRight="5dip" />
-	<TextView android:text="@string/about2" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="5dip"
-		android:paddingRight="5dip" />
-	<TextView android:text="@string/license_"
-		android:layout_width="wrap_content" android:layout_height="wrap_content"
-		android:paddingTop="5dip" android:paddingLeft="5dip" />
-	<TextView android:text="@string/license" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="15dip"
-		android:paddingRight="5dip" android:autoLink="web" />
+		<TextView android:text="@string/about0" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingLeft="5dip"
+			android:paddingRight="5dip" />
+		<TextView android:text="@string/about1" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingLeft="5dip"
+			android:paddingRight="5dip" />
+		<TextView android:text="@string/about2" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingLeft="5dip"
+			android:paddingRight="5dip" />
+		<TextView android:text="@string/license_"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:paddingTop="5dip" android:paddingLeft="5dip" />
+		<TextView android:text="@string/license"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:paddingLeft="15dip" android:paddingRight="5dip"
+			android:autoLink="web" />
 
-	<TextView android:text="@string/author_" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingTop="5dip"
-		android:paddingLeft="5dip" />
-	<TextView android:text="@string/author" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="15dip"
-		android:paddingRight="5dip" android:autoLink="email" />
+		<TextView android:text="@string/author_"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:paddingTop="5dip" android:paddingLeft="5dip" />
+		<TextView android:text="@string/author" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingLeft="15dip"
+			android:paddingRight="5dip" android:autoLink="email" />
 
-	<TextView android:text="@string/source_" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingTop="5dip"
-		android:paddingLeft="5dip" />
-	<TextView android:text="@string/source" android:layout_width="wrap_content"
-		android:layout_height="wrap_content" android:paddingLeft="15dip"
-		android:paddingRight="5dip" android:autoLink="web" />
+		<TextView android:text="@string/source_"
+			android:layout_width="wrap_content" android:layout_height="wrap_content"
+			android:paddingTop="5dip" android:paddingLeft="5dip" />
+		<TextView android:text="@string/source" android:layout_width="wrap_content"
+			android:layout_height="wrap_content" android:paddingLeft="15dip"
+			android:paddingRight="5dip" android:autoLink="web" />
 
-	<Button android:id="@+id/btn_donate" android:text="@string/donate_"
-		android:layout_width="fill_parent" android:layout_height="wrap_content"
-		android:layout_marginTop="10dip" android:layout_marginLeft="5dip"
-		android:layout_marginRight="5dip" />
-</LinearLayout>
+		<Button android:id="@+id/btn_donate" android:text="@string/donate_"
+			android:layout_width="fill_parent" android:layout_height="wrap_content"
+			android:layout_marginTop="10dip" android:layout_marginLeft="5dip"
+			android:layout_marginRight="5dip" />
+	</LinearLayout>
+</ScrollView>
