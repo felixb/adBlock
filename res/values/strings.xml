@@ -31,7 +31,7 @@
 	<string name="about0">AdBlock blocks HTTP requests. It may be used
 		for blocking unwanted ads on webpages.
 		It will NOT block ads in apps.
-		Admob and Google is on permanent whitelist!
+		Admob and Google are on permanent whitelist!
 	</string>
 	<string name="about1">Set APN`s proxy preferences to localhost with
 		the port set in main application.
