@@ -186,7 +186,8 @@ public class AdBlock extends Activity implements OnClickListener,
 				.getText().toString());
 		StringBuilder sb = new StringBuilder();
 		for (String s : this.filter) {
-			if (s.indexOf("admob") < 0) { // won't block admob
+			if (s.indexOf("admob") < 0 // won't block admob
+					&& s.indexOf("google") < 0) { // won't block google
 				sb.append(s + "\n");
 			}
 		}
