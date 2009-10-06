@@ -59,7 +59,7 @@ public class AdBlock extends Activity implements OnClickListener,
 		OnItemClickListener {
 
 	/** Tag for output. */
-	private final String TAG = "AdBlock";
+	private static final String TAG = "AdBlock";
 
 	/** Preferences: Port. */
 	static final String PREFS_PORT = "port";
