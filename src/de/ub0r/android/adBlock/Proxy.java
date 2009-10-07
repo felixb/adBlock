@@ -158,6 +158,9 @@ public class Proxy extends Service implements Runnable {
 		 * @return if URL is blocked?
 		 */
 		private boolean checkURL(final String url) {
+			if (url.indexOf("admob") >= 0 || url.indexOf("google") >= 0) {
+				return false;
+			}
 			for (String f : Proxy.this.filter) {
 				if (url.indexOf(f) >= 0) {
 					return true;

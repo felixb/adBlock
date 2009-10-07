@@ -174,7 +174,7 @@ public class AdBlock extends Activity implements OnClickListener,
 		this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		((EditText) this.findViewById(R.id.port)).setText(this.preferences
 				.getString(PREFS_PORT, "8080"));
-		String f = this.preferences.getString(PREFS_FILTER, "");
+		String f = this.preferences.getString(PREFS_FILTER, "/ads/\n.ads/");
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
 				this.filter.add(s);
