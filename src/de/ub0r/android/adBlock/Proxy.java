@@ -99,7 +99,7 @@ public class Proxy extends Service implements Runnable {
 			/** Object to notify with at EOF. */
 			private final Object sync;
 			/** Size of buffer. */
-			private static final short BUFFSIZE = 1024;
+			private static final short BUFFSIZE = 256;
 
 			/**
 			 * Constructor.
