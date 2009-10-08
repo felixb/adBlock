@@ -109,6 +109,7 @@ public class AdBlock extends Activity implements OnClickListener,
 		 * 
 		 * @param dummy
 		 *            nothing here
+		 * @return successful?
 		 */
 		@Override
 		protected final Boolean doInBackground(final String... dummy) {
@@ -133,12 +134,12 @@ public class AdBlock extends Activity implements OnClickListener,
 				reader.close();
 				return true;
 			} catch (MalformedURLException e) {
-				Log.e(AdBlock.this.TAG, null, e);
+				Log.e(AdBlock.TAG, null, e);
 				this.message = e.toString();
 				return false;
 			} catch (IOException e) {
 				this.message = e.toString();
-				Log.e(AdBlock.this.TAG, null, e);
+				Log.e(AdBlock.TAG, null, e);
 				return false;
 			}
 		}
@@ -186,7 +187,8 @@ public class AdBlock extends Activity implements OnClickListener,
 
 		((EditText) this.findViewById(R.id.port)).setText(this.preferences
 				.getString(Proxy.PREFS_PORT, "8080"));
-		String f = this.preferences.getString(Proxy.PREFS_FILTER, "/ads/\n.ads/");
+		String f = this.preferences.getString(Proxy.PREFS_FILTER,
+				"/ads/\n.ads/");
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
 				this.filter.add(s);
@@ -210,8 +212,8 @@ public class AdBlock extends Activity implements OnClickListener,
 	/** Save Preferences. */
 	private void savePreferences() {
 		SharedPreferences.Editor editor = this.preferences.edit();
-		editor.putString(Proxy.PREFS_PORT, ((EditText) this.findViewById(R.id.port))
-				.getText().toString());
+		editor.putString(Proxy.PREFS_PORT, ((EditText) this
+				.findViewById(R.id.port)).getText().toString());
 		StringBuilder sb = new StringBuilder();
 		for (String s : this.filter) {
 			if (s.indexOf("admob") < 0 // won't block admob
@@ -452,4 +454,3 @@ public class AdBlock extends Activity implements OnClickListener,
 		alert.show();
 	}
 }
-
