@@ -46,7 +46,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
@@ -61,6 +63,8 @@ public class AdBlock extends Activity implements OnClickListener,
 	/** Tag for output. */
 	private static final String TAG = "AdBlock";
 
+	/** Prefs: name for last version run */
+	private static final String PREFS_LAST_RUN = "lastrun";
 	/** Preferences: Port. */
 	static final String PREFS_PORT = "port";
 	/** Preferences: Filter. */
@@ -79,6 +83,8 @@ public class AdBlock extends Activity implements OnClickListener,
 	private static final int DIALOG_ABOUT = 0;
 	/** Dialog: import. */
 	private static final int DIALOG_IMPORT = 1;
+	/** Dialog: update. */
+	private static final int DIALOG_UPDATE = 2;
 
 	/** Prefs. */
 	private SharedPreferences preferences;
@@ -172,6 +178,16 @@ public class AdBlock extends Activity implements OnClickListener,
 		this.setContentView(R.layout.main);
 
 		this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
+		// display changelog?
+		String v0 = this.preferences.getString(PREFS_LAST_RUN, "");
+		String v1 = this.getResources().getString(R.string.app_version);
+		if (!v0.equals(v1)) {
+			SharedPreferences.Editor editor = this.preferences.edit();
+			editor.putString(PREFS_LAST_RUN, v1);
+			editor.commit();
+			this.showDialog(DIALOG_UPDATE);
+		}
+
 		((EditText) this.findViewById(R.id.port)).setText(this.preferences
 				.getString(PREFS_PORT, "8080"));
 		String f = this.preferences.getString(PREFS_FILTER, "/ads/\n.ads/");
@@ -354,6 +370,21 @@ public class AdBlock extends Activity implements OnClickListener,
 			((Button) myDialog.findViewById(R.id.cancel))
 					.setOnClickListener(this);
 			break;
+		case DIALOG_UPDATE:
+			myDialog = new Dialog(this);
+			myDialog.setContentView(R.layout.update);
+			myDialog.setTitle(R.string.changelog_);
+			LinearLayout layout = (LinearLayout) myDialog
+					.findViewById(R.id.base_view);
+			TextView tw;
+			String[] changes = this.getResources().getStringArray(
+					R.array.updates);
+			for (String c : changes) {
+				tw = new TextView(this);
+				tw.setText(c);
+				layout.addView(tw);
+			}
+			break;
 		default:
 			myDialog = null;
 		}
@@ -425,3 +456,4 @@ public class AdBlock extends Activity implements OnClickListener,
 		alert.show();
 	}
 }
+
