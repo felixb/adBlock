@@ -65,10 +65,6 @@ public class AdBlock extends Activity implements OnClickListener,
 
 	/** Prefs: name for last version run */
 	private static final String PREFS_LAST_RUN = "lastrun";
-	/** Preferences: Port. */
-	static final String PREFS_PORT = "port";
-	/** Preferences: Filter. */
-	static final String PREFS_FILTER = "filter";
 	/** Preferences: import url. */
 	private static final String PREFS_IMPORT_URL = "importurl";
 
@@ -189,8 +185,8 @@ public class AdBlock extends Activity implements OnClickListener,
 		}
 
 		((EditText) this.findViewById(R.id.port)).setText(this.preferences
-				.getString(PREFS_PORT, "8080"));
-		String f = this.preferences.getString(PREFS_FILTER, "/ads/\n.ads/");
+				.getString(Proxy.PREFS_PORT, "8080"));
+		String f = this.preferences.getString(Proxy.PREFS_FILTER, "/ads/\n.ads/");
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
 				this.filter.add(s);
@@ -214,7 +210,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	/** Save Preferences. */
 	private void savePreferences() {
 		SharedPreferences.Editor editor = this.preferences.edit();
-		editor.putString(PREFS_PORT, ((EditText) this.findViewById(R.id.port))
+		editor.putString(Proxy.PREFS_PORT, ((EditText) this.findViewById(R.id.port))
 				.getText().toString());
 		StringBuilder sb = new StringBuilder();
 		for (String s : this.filter) {
@@ -223,7 +219,7 @@ public class AdBlock extends Activity implements OnClickListener,
 				sb.append(s + "\n");
 			}
 		}
-		editor.putString(PREFS_FILTER, sb.toString());
+		editor.putString(Proxy.PREFS_FILTER, sb.toString());
 		editor.putString(PREFS_IMPORT_URL, this.importUrl);
 		editor.commit();
 	}

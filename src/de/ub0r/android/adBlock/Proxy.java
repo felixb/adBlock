@@ -47,6 +47,11 @@ import android.widget.Toast;
  */
 public class Proxy extends Service implements Runnable {
 
+	/** Preferences: Port. */
+	static final String PREFS_PORT = "port";
+	/** Preferences: Filter. */
+	static final String PREFS_FILTER = "filter";
+
 	/** HTTP Response: blocked. */
 	private static final String HTTP_BLOCK = "HTTP/1.1 500 blocked by AdBlock";
 	/** HTTP Response: error. */
@@ -367,12 +372,12 @@ public class Proxy extends Service implements Runnable {
 
 		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		int p = Integer.parseInt(preferences.getString(AdBlock.PREFS_PORT,
+		int p = Integer.parseInt(preferences.getString(PREFS_PORT,
 				"8080"));
 		boolean portChanged = p != this.port;
 		this.port = p;
 
-		String f = preferences.getString(AdBlock.PREFS_FILTER, "");
+		String f = preferences.getString(PREFS_FILTER, "");
 		this.filter.clear();
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
