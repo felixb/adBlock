@@ -18,6 +18,7 @@
  */
 package de.ub0r.android.adBlock;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -61,6 +62,11 @@ public class Proxy extends Service implements Runnable {
 	/** HTTP Response: flush. */
 	private static final String HTTP_RESPONSE = "\n\n";
 
+	/** Default Port for HTTP. */
+	private static final int PORT_HTTP = 80;
+	/** Default Port for HTTPS. */
+	private static final int PORT_HTTPS = 443;
+
 	/** Proxy. */
 	private Thread proxy = null;
 	/** Proxy's port. */
@@ -96,8 +102,7 @@ public class Proxy extends Service implements Runnable {
 			private final InputStream reader;
 			/** Writer. */
 			private final OutputStream writer;
-			/** Object to notify with at EOF. */
-			private final Object sync;
+
 			/** Size of buffer. */
 			private static final short BUFFSIZE = 256;
 
@@ -108,14 +113,10 @@ public class Proxy extends Service implements Runnable {
 			 *            reader
 			 * @param w
 			 *            writer
-			 * @param s
-			 *            object to sync with
 			 */
-			public CopyStream(final InputStream r, final OutputStream w,
-					final Object s) {
-				this.reader = r;
+			public CopyStream(final InputStream r, final OutputStream w) {
+				this.reader = new BufferedInputStream(r, BUFFSIZE);
 				this.writer = w;
-				this.sync = s;
 			}
 
 			/**
@@ -125,18 +126,23 @@ public class Proxy extends Service implements Runnable {
 			public void run() {
 				try {
 					byte[] buf = new byte[BUFFSIZE];
-					int read = -1;
+					int read = 0;
+					String s = "";
 					while (true) {
-						read = this.reader.read(buf);
+						read = this.reader.available();
+						if (read < 1 || read > BUFFSIZE) {
+							read = BUFFSIZE;
+						}
+						read = this.reader.read(buf, 0, read);
 						if (read < 0) {
 							break;
 						}
+						s = new String(buf, 0, read);
+						Log.d(TAG, s);
 						this.writer.write(buf, 0, read);
 						this.writer.flush();
 					}
-					synchronized (this.sync) {
-						this.sync.notify();
-					}
+					this.writer.close();
 				} catch (IOException e) {
 					Log.e(TAG, null, e);
 				}
@@ -148,8 +154,6 @@ public class Proxy extends Service implements Runnable {
 		 * 
 		 * @param socket
 		 *            local Socket
-		 * @param context
-		 *            global Context
 		 */
 		public Connection(final Socket socket) {
 			this.local = socket;
@@ -175,169 +179,194 @@ public class Proxy extends Service implements Runnable {
 		}
 
 		/**
+		 * Read in HTTP Header. Parse for URL to connect to.
+		 * 
+		 * @param reader
+		 *            buffer reader from which we read the header
+		 * @param buffer
+		 *            buffer into which the header is written
+		 * @return URL to which we should connect, port other than 80 is given
+		 *         explicitly
+		 * @throws IOException
+		 *             inner IOException
+		 */
+		private URL readHeader(final BufferedReader reader,
+				final StringBuilder buffer) throws IOException {
+			URL ret = null;
+			String[] strings;
+			// read first line
+			String line = reader.readLine();
+			if (line == null) {
+				return null;
+			}
+			buffer.append(line + "\n");
+			strings = line.split(" ");
+			if (strings.length > 1) {
+				if (strings[0].equals("CONNECT")) {
+					String targetHost = strings[1];
+					int targetPort = PORT_HTTPS;
+					strings = targetHost.split(":");
+					if (strings.length > 1) {
+						targetPort = Integer.parseInt(strings[1]);
+						targetHost = strings[0];
+					}
+					ret = new URL("https://" + targetHost + ":" + targetPort);
+				} else if (strings[0].equals("GET")
+						|| strings[1].equals("POST")) {
+					String path = null;
+					if (strings[1].startsWith("http://")) {
+						ret = new URL(strings[1]);
+						path = ret.getPath();
+					} else {
+						path = strings[1];
+					}
+					// read header
+					while (true) {
+						line = reader.readLine();
+						buffer.append(line + "\n");
+						if (line.length() == 0) {
+							break;
+						}
+						if (line.startsWith("Host:")) {
+							strings = line.split(" ");
+							if (strings.length > 1) {
+								ret = new URL("http://" + strings[1] + path);
+							}
+							break;
+						}
+					}
+				}
+			}
+			strings = null;
+
+			// copy rest of reader's buffer
+			while (reader.ready()) {
+				buffer.append(reader.readLine() + "\n");
+			}
+			return ret;
+		}
+
+		/**
 		 * Run by Thread.start().
 		 */
 		@Override
 		public void run() {
+			InputStream lInStream;
+			OutputStream lOutStream;
+			BufferedReader lReader;
+			BufferedWriter lWriter;
 			try {
-				InputStream localInputStream = this.local.getInputStream();
-				OutputStream localOutputStream = this.local.getOutputStream();
-				BufferedReader localReader = new BufferedReader(
-						new InputStreamReader(localInputStream),
+				lInStream = this.local.getInputStream();
+				lOutStream = this.local.getOutputStream();
+				lReader = new BufferedReader(new InputStreamReader(lInStream),
 						CopyStream.BUFFSIZE);
-				BufferedWriter localWriter = new BufferedWriter(
-						new OutputStreamWriter(localOutputStream),
-						CopyStream.BUFFSIZE);
-				try {
-					InputStream remoteInputStream = null;
-					OutputStream remoteOutputStream = null;
-					StringBuilder buffer = new StringBuilder();
-					String s;
-					boolean firstLine = true;
-					boolean block = false;
-					boolean uncompleteURL = true;
-					boolean connectHTTPS = false;
-					String url = null;
-					String targetHost = null;
-					int targetPort = -1;
-					while (this.remote == null && !block) {
-						s = localReader.readLine();
-						buffer.append(s + "\n");
-						Log.v(TAG, s);
-						if (firstLine) {
-							url = s.split(" ")[1];
-							if (s.startsWith("CONNECT ")) {
-								targetPort = 443;
-								targetHost = url;
-								int i = targetHost.indexOf(':');
-								if (i > 0) {
-									targetPort = Integer.parseInt(targetHost
-											.substring(i + 1));
-									targetHost = targetHost.substring(0, i);
-								}
-								connectHTTPS = true;
-							} else if (url.startsWith("http:")) {
-								uncompleteURL = false;
-								block = this.checkURL(url);
-							} else {
-								uncompleteURL = true;
-							}
-							firstLine = false;
+				lWriter = new BufferedWriter(
+						new OutputStreamWriter(lOutStream), CopyStream.BUFFSIZE);
+			} catch (IOException e) {
+				Log.e(TAG, null, e);
+				return;
+			}
+			try {
+				InputStream rInStream = null;
+				OutputStream rOutStream = null;
+				BufferedWriter remoteWriter = null;
+				Thread remoteThread = null;
+				StringBuilder buffer = new StringBuilder();
+				boolean block = false;
+				String tHost = null;
+				int tPort = -1;
+				URL url;
+				boolean connectSSL = false;
+				while (this.local.isConnected()) {
+					buffer = new StringBuilder();
+					url = this.readHeader(lReader, buffer);
+					if (remoteThread != null && !remoteThread.isAlive()) {
+						remoteThread.join();
+						tHost = null;
+						if (connectSSL) {
+							this.local.close();
 						}
-						if (!block && s.startsWith("Host:")) {
-							// init remote socket
-							targetPort = 80;
-							targetHost = s.substring(6).trim();
-							int i = targetHost.indexOf(':');
-							if (i > 0) {
-								targetPort = Integer.parseInt(targetHost
-										.substring(i + 1));
-								targetHost = targetHost.substring(0, i);
-							}
-							if (uncompleteURL) {
-								url = targetHost + url;
-								block = this.checkURL(url);
-							}
-							if (block) {
-								break;
-							}
-						} else if (!block && s.length() == 0) { // end of header
-							if (url.startsWith("http")) {
-								URL u = new URL(url);
-								targetHost = u.getHost();
-								targetPort = u.getPort();
-								if (targetPort < 0) {
-									targetPort = 80;
-								}
-							} else {
-								localWriter.append(HTTP_ERROR
-										+ " - PROTOCOL ERROR" + HTTP_RESPONSE
-										+ "PROTOCOL ERROR");
-								localWriter.flush();
-								localWriter.close();
-								this.local.close();
-								break;
-							}
-						}
-						if (targetHost != null && targetPort > 0) {
-							Log.v(TAG, "connect to " + targetHost + " "
-									+ targetPort);
-							this.remote = new Socket();
-							this.remote.connect(new InetSocketAddress(
-									targetHost, targetPort));
-							remoteInputStream = this.remote.getInputStream();
-							remoteOutputStream = this.remote.getOutputStream();
-							if (connectHTTPS) {
-								localWriter.write(HTTP_CONNECTED
-										+ HTTP_RESPONSE);
-							} else {
-								BufferedWriter remoteWriter = new BufferedWriter(
-										new OutputStreamWriter(
-												remoteOutputStream),
-										CopyStream.BUFFSIZE);
-								while (localReader.ready()) {
-									buffer
-											.append(localReader.readLine()
-													+ "\n");
-								}
-								remoteWriter.append(buffer);
-								remoteWriter.flush();
-							}
-							buffer = null;
-							// remoteWriter.close(); // writer.close() will
-							// close underlying socket!
-						}
-					}
-					if (this.remote != null && this.remote.isConnected()) {
-						Object sync = new Object();
-						localWriter.flush();
-						localOutputStream.flush();
-						remoteOutputStream.flush();
-						Thread t1 = new Thread(new CopyStream(
-								remoteInputStream, localOutputStream, sync));
-						Thread t2 = new Thread(new CopyStream(localInputStream,
-								remoteOutputStream, sync));
-						try {
-							synchronized (sync) {
-								t1.start();
-								t2.start();
-								sync.wait();
-							}
-						} catch (InterruptedException e) {
-							Log.e(TAG, null, e);
-						}
-						this.local.shutdownInput();
 						this.remote.shutdownInput();
-						this.local.shutdownOutput();
 						this.remote.shutdownOutput();
 						this.remote.close();
-						this.local.close();
-						t1.join();
-						t2.join();
-					} else if (block) {
-						while (localReader.ready()) {
-							localReader.readLine();
-						}
-						localWriter.append(HTTP_BLOCK + HTTP_RESPONSE
-								+ "BLOCKED by AdBlock!");
-						localWriter.flush();
-						localWriter.close();
-						this.local.close();
+						this.remote = null;
+						rInStream = null;
+						rOutStream = null;
+						remoteThread = null;
 					}
-				} catch (InterruptedException e) {
-					// do nothing
-				} catch (NullPointerException e) {
-					// do nothing
-				} catch (Exception e) {
-					Log.e(TAG, null, e);
-					localWriter.append(HTTP_ERROR + " - " + e.toString()
-							+ HTTP_RESPONSE + e.toString());
-					localWriter.flush();
-					localWriter.close();
-					this.local.close();
+					if (url != null) {
+						block = this.checkURL(url.toString());
+						Log.d(TAG, "new url: " + url.toString());
+						if (!block) {
+							// new connection needed?
+							int p = url.getPort();
+							if (p < 0) {
+								p = PORT_HTTP;
+							}
+							if (tHost == null || !tHost.equals(url.getHost())
+									|| tPort != p) {
+								// create new connection
+								if (this.remote != null) {
+									this.remote.shutdownInput();
+									this.remote.shutdownOutput();
+								}
+								tHost = url.getHost();
+								tPort = url.getPort();
+								if (tPort < 0) {
+									tPort = PORT_HTTP;
+								}
+								Log.d(TAG, "new socket: " + url.toString());
+								this.remote = new Socket();
+								this.remote.connect(new InetSocketAddress(
+										tHost, tPort));
+								rInStream = this.remote.getInputStream();
+								rOutStream = this.remote.getOutputStream();
+								remoteThread = new Thread(new CopyStream(
+										rInStream, lOutStream));
+								remoteThread.start();
+								if (url.getProtocol().startsWith("https")) {
+									connectSSL = true;
+									lWriter.write(HTTP_CONNECTED
+											+ HTTP_RESPONSE);
+									lWriter.flush();
+									// copy local to remote by blocks
+									Thread t2 = new Thread(new CopyStream(
+											lInStream, rOutStream));
+
+									t2.start();
+									remoteWriter = null;
+									break; // copy in separate thread. break
+									// while here
+								} else {
+									remoteWriter = new BufferedWriter(
+											new OutputStreamWriter(rOutStream),
+											CopyStream.BUFFSIZE);
+								}
+							}
+						}
+					}
+					// push data to remote if not blocked
+					if (block) {
+						lWriter.append(HTTP_BLOCK + HTTP_RESPONSE
+								+ "BLOCKED by AdBlock!");
+						lWriter.flush();
+					} else if (this.remote != null && this.remote.isConnected()
+							&& remoteWriter != null) {
+						remoteWriter.append(buffer);
+						remoteWriter.flush();
+					}
 				}
-			} catch (IOException e1) {
-				Log.e(TAG, null, e1);
+			} catch (Exception e) {
+				Log.e(TAG, null, e);
+				try {
+					lWriter.append(HTTP_ERROR + " - " + e.toString()
+							+ HTTP_RESPONSE + e.toString());
+					lWriter.flush();
+					lWriter.close();
+					this.local.close();
+				} catch (IOException e1) {
+					Log.e(TAG, null, e1);
+				}
 			}
 		}
 	}
@@ -372,8 +401,7 @@ public class Proxy extends Service implements Runnable {
 
 		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
-		int p = Integer.parseInt(preferences.getString(PREFS_PORT,
-				"8080"));
+		int p = Integer.parseInt(preferences.getString(PREFS_PORT, "8080"));
 		boolean portChanged = p != this.port;
 		this.port = p;
 
@@ -425,6 +453,7 @@ public class Proxy extends Service implements Runnable {
 				}
 				client = sock.accept();
 				if (client != null) {
+					Log.d(TAG, "new client");
 					Thread t = new Thread(new Connection(client));
 					t.start();
 				}
