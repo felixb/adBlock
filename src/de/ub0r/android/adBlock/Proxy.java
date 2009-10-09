@@ -19,6 +19,7 @@
 package de.ub0r.android.adBlock;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -118,7 +119,7 @@ public class Proxy extends Service implements Runnable {
 			 */
 			public CopyStream(final InputStream r, final OutputStream w) {
 				this.reader = new BufferedInputStream(r, BUFFSIZE);
-				this.writer = w;
+				this.writer = new BufferedOutputStream(w, BUFFSIZE);
 			}
 
 			/**
@@ -126,9 +127,9 @@ public class Proxy extends Service implements Runnable {
 			 */
 			@Override
 			public void run() {
+				byte[] buf = new byte[BUFFSIZE];
+				int read = 0;
 				try {
-					byte[] buf = new byte[BUFFSIZE];
-					int read = 0;
 					while (true) {
 						read = this.reader.available();
 						if (read < 1 || read > BUFFSIZE) {
@@ -138,15 +139,16 @@ public class Proxy extends Service implements Runnable {
 						if (read < 0) {
 							break;
 						}
-						// s = new String(buf, 0, read);
-						// Log.d(TAG, s);
 						this.writer.write(buf, 0, read);
-						this.writer.flush();
+						if (this.reader.available() < 1) {
+							this.writer.flush();
+						}
 					}
 					this.writer.close();
 					Connection.this.close();
 				} catch (IOException e) {
 					Log.e(TAG, null, e);
+					Log.d(TAG, new String(buf, 0, read));
 				}
 			}
 		}
@@ -198,7 +200,7 @@ public class Proxy extends Service implements Runnable {
 			String[] strings;
 			// read first line
 			while (!reader.ready() && this.local.isConnected()) {
-				try {
+				try { // isConnected does not work :/
 					Thread.sleep(SLEEP);
 				} catch (InterruptedException e) {
 					Log.e(TAG, null, e);
@@ -265,6 +267,7 @@ public class Proxy extends Service implements Runnable {
 		 *             IOException
 		 */
 		private void close() throws IOException {
+			Log.d(TAG, "close()");
 			if (this.remote != null) {
 				if (this.remote.isConnected()) {
 					try {
@@ -315,7 +318,7 @@ public class Proxy extends Service implements Runnable {
 				InputStream rInStream = null;
 				OutputStream rOutStream = null;
 				BufferedWriter remoteWriter = null;
-				Thread remoteThread = null;
+				Thread rThread = null;
 				StringBuilder buffer = new StringBuilder();
 				boolean block = false;
 				String tHost = null;
@@ -325,20 +328,26 @@ public class Proxy extends Service implements Runnable {
 				while (this.local.isConnected()) {
 					buffer = new StringBuilder();
 					url = this.readHeader(lReader, buffer);
-					if (this.local.isConnected() && remoteThread != null
-							&& !remoteThread.isAlive()) {
-						remoteThread.join();
+					if (buffer.length() == 0) {
+						break;
+					}
+					if (this.local.isConnected() && rThread != null
+							&& !rThread.isAlive()) {
+						rThread.join();
 						tHost = null;
 						if (connectSSL) {
 							this.local.close();
 						}
-						this.remote.shutdownInput();
-						this.remote.shutdownOutput();
-						this.remote.close();
-						this.remote = null;
+						if (remote != null) {
+							Log.d(TAG, "close dead remote");
+							this.remote.shutdownInput();
+							this.remote.shutdownOutput();
+							this.remote.close();
+							this.remote = null;
+						}
 						rInStream = null;
 						rOutStream = null;
-						remoteThread = null;
+						rThread = null;
 					}
 					if (url != null) {
 						block = this.checkURL(url.toString());
@@ -353,8 +362,10 @@ public class Proxy extends Service implements Runnable {
 									|| tPort != p) {
 								// create new connection
 								if (this.remote != null) {
+									Log.d(TAG, "shutdown old remote");
 									this.remote.shutdownInput();
-									this.remote.shutdownOutput();
+									// this.remote.shutdownOutput();
+									rThread.join();
 								}
 								tHost = url.getHost();
 								tPort = url.getPort();
@@ -367,9 +378,9 @@ public class Proxy extends Service implements Runnable {
 										tHost, tPort));
 								rInStream = this.remote.getInputStream();
 								rOutStream = this.remote.getOutputStream();
-								remoteThread = new Thread(new CopyStream(
-										rInStream, lOutStream));
-								remoteThread.start();
+								rThread = new Thread(new CopyStream(rInStream,
+										lOutStream));
+								rThread.start();
 								if (url.getProtocol().startsWith("https")) {
 									connectSSL = true;
 									lWriter.write(HTTP_CONNECTED
@@ -402,7 +413,12 @@ public class Proxy extends Service implements Runnable {
 						remoteWriter.flush();
 					}
 				}
-			} catch (Exception e) {
+				if (rThread != null && rThread.isAlive()) {
+					rThread.join();
+				}
+			} catch (InterruptedException e) {
+				Log.e(TAG, null, e);
+			} catch (IOException e) {
 				Log.e(TAG, null, e);
 				try {
 					lWriter.append(HTTP_ERROR + " - " + e.toString()
