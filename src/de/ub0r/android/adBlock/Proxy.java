@@ -90,6 +90,8 @@ public class Proxy extends Service implements Runnable {
 		private final Socket local;
 		/** Remote Socket. */
 		private Socket remote;
+		/** Time to wait for new input. */
+		private static final long SLEEP = 100;
 
 		/**
 		 * CopyStream reads one stream and writes it's data into an other
@@ -104,7 +106,7 @@ public class Proxy extends Service implements Runnable {
 			private final OutputStream writer;
 
 			/** Size of buffer. */
-			private static final short BUFFSIZE = 256;
+			private static final short BUFFSIZE = 512;
 
 			/**
 			 * Constructor.
@@ -127,7 +129,6 @@ public class Proxy extends Service implements Runnable {
 				try {
 					byte[] buf = new byte[BUFFSIZE];
 					int read = 0;
-					String s = "";
 					while (true) {
 						read = this.reader.available();
 						if (read < 1 || read > BUFFSIZE) {
@@ -137,12 +138,13 @@ public class Proxy extends Service implements Runnable {
 						if (read < 0) {
 							break;
 						}
-						s = new String(buf, 0, read);
-						Log.d(TAG, s);
+						// s = new String(buf, 0, read);
+						// Log.d(TAG, s);
 						this.writer.write(buf, 0, read);
 						this.writer.flush();
 					}
 					this.writer.close();
+					Connection.this.close();
 				} catch (IOException e) {
 					Log.e(TAG, null, e);
 				}
@@ -195,6 +197,16 @@ public class Proxy extends Service implements Runnable {
 			URL ret = null;
 			String[] strings;
 			// read first line
+			while (!reader.ready() && this.local.isConnected()) {
+				try {
+					Thread.sleep(SLEEP);
+				} catch (InterruptedException e) {
+					Log.e(TAG, null, e);
+				}
+			}
+			if (!this.local.isConnected()) {
+				return null;
+			}
 			String line = reader.readLine();
 			if (line == null) {
 				return null;
@@ -247,6 +259,39 @@ public class Proxy extends Service implements Runnable {
 		}
 
 		/**
+		 * Close local and remote socket.
+		 * 
+		 * @throws IOException
+		 *             IOException
+		 */
+		private void close() throws IOException {
+			if (this.remote != null) {
+				if (this.remote.isConnected()) {
+					try {
+						this.remote.shutdownInput();
+						this.remote.shutdownOutput();
+					} catch (IOException e) {
+						// Log.e(TAG, null, e);
+					}
+					this.remote.close();
+				}
+				this.remote = null;
+			}
+			if (this.local != null) {
+				if (this.local.isConnected()) {
+					try {
+						this.local.shutdownOutput();
+						this.local.shutdownInput();
+					} catch (IOException e) {
+						// Log.e(TAG, null, e);
+					}
+
+					this.local.close();
+				}
+			}
+		}
+
+		/**
 		 * Run by Thread.start().
 		 */
 		@Override
@@ -280,7 +325,8 @@ public class Proxy extends Service implements Runnable {
 				while (this.local.isConnected()) {
 					buffer = new StringBuilder();
 					url = this.readHeader(lReader, buffer);
-					if (remoteThread != null && !remoteThread.isAlive()) {
+					if (this.local.isConnected() && remoteThread != null
+							&& !remoteThread.isAlive()) {
 						remoteThread.join();
 						tHost = null;
 						if (connectSSL) {
@@ -368,6 +414,7 @@ public class Proxy extends Service implements Runnable {
 					Log.e(TAG, null, e1);
 				}
 			}
+			Log.d(TAG, "close connection");
 		}
 	}
 
