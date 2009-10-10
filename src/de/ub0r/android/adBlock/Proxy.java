@@ -224,14 +224,19 @@ public class Proxy extends Service implements Runnable {
 			URL ret = null;
 			String[] strings;
 			// read first line
+			/*
 			while (!reader.ready() && this.state != STATE_CLOSED_OUT) {
-				try { // isConnected does not work :/
-					Thread.sleep(SLEEP);
-				} catch (InterruptedException e) {
-					Log.e(TAG, null, e);
+				if (this.local.isConnected() {
+					try { // isConnected does not work :/
+						Thread.sleep(SLEEP);
+					} catch (InterruptedException e) {
+						Log.e(TAG, null, e);
+					}
+				} else {
+					this.state = STATE_CLOSED_OUT;
 				}
 			}
-			this.firstRun = false;
+			*/
 			if (this.state == STATE_CLOSED_OUT) {
 				return null;
 			}
