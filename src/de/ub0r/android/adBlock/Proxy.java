@@ -172,8 +172,9 @@ public class Proxy extends Service implements Runnable {
 					this.writer.close();
 					Connection.this.close();
 				} catch (IOException e) {
-					Log.e(TAG, null, e);
-					Log.d(TAG, new String(buf, 0, read));
+					Log.e(TAG, e.toString());
+					// Log.e(TAG, null, e);
+					// Log.d(TAG, new String(buf, 0, read));
 				}
 			}
 		}
@@ -295,7 +296,7 @@ public class Proxy extends Service implements Runnable {
 							mSocket.shutdownInput();
 							mSocket.shutdownOutput();
 						} catch (IOException e) {
-							Log.e(TAG, null, e);
+							// Log.e(TAG, null, e);
 						}
 						mSocket.close();
 					}
@@ -310,7 +311,7 @@ public class Proxy extends Service implements Runnable {
 							mSocket.shutdownOutput();
 							mSocket.shutdownInput();
 						} catch (IOException e) {
-							Log.e(TAG, null, e);
+							// Log.e(TAG, null, e);
 						}
 						mSocket.close();
 					}
@@ -441,10 +442,15 @@ public class Proxy extends Service implements Runnable {
 						lWriter.append(HTTP_BLOCK + HTTP_RESPONSE
 								+ "BLOCKED by AdBlock!");
 						lWriter.flush();
-					} else if (this.remote != null && this.remote.isConnected()
-							&& remoteWriter != null) {
-						remoteWriter.append(buffer);
-						remoteWriter.flush();
+					} else {
+						Socket mSocket = this.remote;
+						if (mSocket != null && mSocket.isConnected()
+								&& remoteWriter != null) {
+							remoteWriter.append(buffer);
+							remoteWriter.flush();
+							// FIXME: exceptions here!
+							// sync does not fix anything
+						}
 					}
 				}
 				if (rThread != null && rThread.isAlive()) {
