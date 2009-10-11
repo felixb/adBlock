@@ -95,12 +95,6 @@ public class Proxy extends Service implements Runnable {
 		private final Socket local;
 		/** Remote Socket. */
 		private Socket remote;
-		/** Time to wait for new input. */
-		private static final long SLEEP = 100;
-		/** Is this connection still running? */
-		private boolean running = true;
-		/** First run. */
-		private boolean firstRun = true;
 
 		/** State: normal. */
 		private static final short STATE_NORMAL = 0;
@@ -110,8 +104,6 @@ public class Proxy extends Service implements Runnable {
 		private static final short STATE_CLOSED_OUT = 2;
 		/** Connections state. */
 		private short state = STATE_NORMAL;
-		/** Sync state. */
-		private Object syncState = new Object();
 
 		/**
 		 * CopyStream reads one stream and writes it's data into an other
@@ -163,14 +155,15 @@ public class Proxy extends Service implements Runnable {
 							this.writer.flush();
 						}
 					}
-					synchronized (Connection.this.syncState) {
-						// only change state if old state was normal
-						if (Connection.this.state == Connection.STATE_NORMAL) {
-							Connection.this.state = Connection.STATE_CLOSED_OUT;
-						}
-					}
+					Connection.this.close(Connection.STATE_CLOSED_OUT);
+					/*
+					 * synchronized (Connection.this.syncState) { // only change
+					 * state if old state was normal if (Connection.this.state
+					 * == Connection.STATE_NORMAL) { Connection.this.state =
+					 * Connection.STATE_CLOSED_OUT; } }
+					 */
 					this.writer.close();
-					Connection.this.close();
+
 				} catch (IOException e) {
 					Log.e(TAG, e.toString());
 					// Log.e(TAG, null, e);
@@ -282,41 +275,49 @@ public class Proxy extends Service implements Runnable {
 		/**
 		 * Close local and remote socket.
 		 * 
+		 * @param nextState
+		 *            state to go to
+		 * @return new state
 		 * @throws IOException
 		 *             IOException
 		 */
-		private void close() throws IOException {
-			Log.d(TAG, "close()");
-			// this.running = false;
-			Socket mSocket = this.remote;
-			if (mSocket != null) {
-				synchronized (mSocket) {
-					if (mSocket.isConnected()) {
-						try {
-							mSocket.shutdownInput();
-							mSocket.shutdownOutput();
-						} catch (IOException e) {
-							// Log.e(TAG, null, e);
-						}
-						mSocket.close();
+		private synchronized short close(final short nextState)
+				throws IOException {
+			Log.d(TAG, "close(" + nextState + ")");
+			short mState = this.state;
+			if (mState == STATE_NORMAL || nextState == STATE_NORMAL) {
+				mState = nextState;
+			}
+			Socket mSocket;
+			if (mState != STATE_NORMAL) {
+				// close remote socket
+				mSocket = this.remote;
+				if (mSocket != null && mSocket.isConnected()) {
+					try {
+						mSocket.shutdownInput();
+						mSocket.shutdownOutput();
+					} catch (IOException e) {
+						// Log.e(TAG, null, e);
 					}
+					mSocket.close();
 				}
 				this.remote = null;
 			}
-			mSocket = this.local;
-			if (this.state == STATE_CLOSED_OUT) {
-				synchronized (mSocket) {
-					if (mSocket.isConnected()) {
-						try {
-							mSocket.shutdownOutput();
-							mSocket.shutdownInput();
-						} catch (IOException e) {
-							// Log.e(TAG, null, e);
-						}
-						mSocket.close();
+			if (mState == STATE_CLOSED_OUT) {
+				// close local socket
+				mSocket = this.local;
+				if (mSocket.isConnected()) {
+					try {
+						mSocket.shutdownOutput();
+						mSocket.shutdownInput();
+					} catch (IOException e) {
+						// Log.e(TAG, null, e);
 					}
+					mSocket.close();
 				}
 			}
+			this.state = mState;
+			return mState;
 		}
 
 		/**
@@ -350,7 +351,7 @@ public class Proxy extends Service implements Runnable {
 				int tPort = -1;
 				URL url;
 				boolean connectSSL = false;
-				while (this.running && this.local.isConnected()) {
+				while (this.local.isConnected()) {
 					buffer = new StringBuilder();
 					url = this.readHeader(lReader, buffer);
 					if (buffer.length() == 0) {
@@ -358,21 +359,13 @@ public class Proxy extends Service implements Runnable {
 					}
 					if (this.local.isConnected() && rThread != null
 							&& !rThread.isAlive()) {
-						rThread.join();
-						tHost = null;
+						// TODO: is this a dead branch? if rThread is dead,
+						// socket should be closed allready..
+						Log.d(TAG, "close dead remote");
 						if (connectSSL) {
 							this.local.close();
 						}
-						Socket mSocket = this.remote;
-						if (mSocket != null) {
-							synchronized (mSocket) {
-								Log.d(TAG, "close dead remote");
-								mSocket.shutdownInput();
-								mSocket.shutdownOutput();
-								mSocket.close();
-								this.remote = null;
-							}
-						}
+						tHost = null;
 						rInStream = null;
 						rOutStream = null;
 						rThread = null;
@@ -389,18 +382,13 @@ public class Proxy extends Service implements Runnable {
 							if (tHost == null || !tHost.equals(url.getHost())
 									|| tPort != p) {
 								// create new connection
-								Socket mSocket = this.remote;
-								if (mSocket != null) {
-									this.state = STATE_CLOSED_IN;
-									synchronized (mSocket) {
-										Log.d(TAG, "shutdown old remote");
-										mSocket.shutdownInput();
-										mSocket.shutdownOutput();
-										mSocket.close();
-										this.remote = null;
-									}
+								Log.d(TAG, "shutdown old remote");
+								this.close(STATE_CLOSED_IN);
+								if (rThread != null) {
 									rThread.join();
+									rThread = null;
 								}
+
 								tHost = url.getHost();
 								tPort = url.getPort();
 								if (tPort < 0) {
