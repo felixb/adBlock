@@ -19,7 +19,6 @@
 package de.ub0r.android.adBlock;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -130,7 +129,7 @@ public class Proxy extends Service implements Runnable {
 			 */
 			public CopyStream(final InputStream r, final OutputStream w) {
 				this.reader = new BufferedInputStream(r, BUFFSIZE);
-				this.writer = new BufferedOutputStream(w, BUFFSIZE);
+				this.writer = w;
 			}
 
 			/**
@@ -156,17 +155,12 @@ public class Proxy extends Service implements Runnable {
 						}
 					}
 					Connection.this.close(Connection.STATE_CLOSED_OUT);
-					/*
-					 * synchronized (Connection.this.syncState) { // only change
-					 * state if old state was normal if (Connection.this.state
-					 * == Connection.STATE_NORMAL) { Connection.this.state =
-					 * Connection.STATE_CLOSED_OUT; } }
-					 */
-					this.writer.close();
-
+					// this.writer.close();
 				} catch (IOException e) {
-					Log.e(TAG, e.toString());
-					// Log.e(TAG, null, e);
+					// FIXME: java.net.SocketException: Broken pipe
+					// no idea, what causes this :/
+					Connection c = Connection.this;
+					Log.e(TAG, null, e);
 					// Log.d(TAG, new String(buf, 0, read));
 				}
 			}
@@ -225,7 +219,7 @@ public class Proxy extends Service implements Runnable {
 			if (line == null) {
 				return null;
 			}
-			buffer.append(line + "\n");
+			buffer.append(line + "\r\n");
 			strings = line.split(" ");
 			if (strings.length > 1) {
 				if (strings[0].equals("CONNECT")) {
@@ -249,7 +243,7 @@ public class Proxy extends Service implements Runnable {
 					// read header
 					while (true) {
 						line = reader.readLine();
-						buffer.append(line + "\n");
+						buffer.append(line + "\r\n");
 						if (line.length() == 0) {
 							break;
 						}
@@ -267,7 +261,7 @@ public class Proxy extends Service implements Runnable {
 
 			// copy rest of reader's buffer
 			while (reader.ready()) {
-				buffer.append(reader.readLine() + "\n");
+				buffer.append(reader.readLine() + "\r\n");
 			}
 			return ret;
 		}
@@ -434,8 +428,12 @@ public class Proxy extends Service implements Runnable {
 						Socket mSocket = this.remote;
 						if (mSocket != null && mSocket.isConnected()
 								&& remoteWriter != null) {
-							remoteWriter.append(buffer);
-							remoteWriter.flush();
+							try {
+								remoteWriter.append(buffer);
+								remoteWriter.flush();
+							} catch (IOException e) {
+								Log.d(TAG, buffer.toString(), e);
+							}
 							// FIXME: exceptions here!
 							// sync does not fix anything
 						}
