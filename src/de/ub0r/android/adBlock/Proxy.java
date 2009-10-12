@@ -263,6 +263,9 @@ public class Proxy extends Service implements Runnable {
 
 			// copy rest of reader's buffer
 			while (reader.ready()) {
+				// FIXME this read line breaks everything!
+				// data behind header does not need a read line..
+				// we should read from InputStream directly!
 				buffer.append(reader.readLine() + "\r\n");
 			}
 			return ret;
