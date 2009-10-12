@@ -232,7 +232,7 @@ public class Proxy extends Service implements Runnable {
 					}
 					ret = new URL("https://" + targetHost + ":" + targetPort);
 				} else if (strings[0].equals("GET")
-						|| strings[1].equals("POST")) {
+						|| strings[0].equals("POST")) {
 					String path = null;
 					if (strings[1].startsWith("http://")) {
 						ret = new URL(strings[1]);
@@ -255,6 +255,8 @@ public class Proxy extends Service implements Runnable {
 							break;
 						}
 					}
+				} else {
+					Log.d(TAG, "unknown method: " + strings[0]);
 				}
 			}
 			strings = null;
