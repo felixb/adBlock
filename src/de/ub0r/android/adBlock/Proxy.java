@@ -22,7 +22,6 @@ import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.net.InetSocketAddress;
@@ -216,15 +215,15 @@ public class Proxy extends Service implements Runnable {
 			if (this.state == STATE_CLOSED_OUT) {
 				return null;
 			}
-			//avail = reader.available();
-			//if (avail > CopyStream.BUFFSIZE) {
-			//	avail = CopyStream.BUFFSIZE;
-			//}
-			avail = reader.read(buf, 0, 8);
+			avail = reader.available();
+			if (avail > CopyStream.BUFFSIZE) {
+				avail = CopyStream.BUFFSIZE;
+			}
+			avail = reader.read(buf, 0, avail);
 			if (avail < 1) {
 				return null;
 			}
-			String line = new String(buf, 0, 8);
+			String line = new String(buf, 0, avail);
 			buffer.append(line);
 			strings = line.split(" ");
 			if (strings.length > 1) {
@@ -250,7 +249,7 @@ public class Proxy extends Service implements Runnable {
 					// read header
 					int i;
 					avail = reader.available();
-					String lastLine = "";
+					String lastLine = line;
 					String testLine;
 					while (avail > 0) {
 						if (avail > CopyStream.BUFFSIZE) {
@@ -261,14 +260,12 @@ public class Proxy extends Service implements Runnable {
 						line = new String(buf, 0, avail);
 						buffer.append(line);
 						testLine = lastLine + line;
-						//if (line.length() == 0) {
-						//	break;
-						//}
 						i = testLine.indexOf("\nHost: ");
 						if (i >= 0) {
 							int j = testLine.indexOf("\n", i + 6);
 							if (j > 0) {
-								String tHost = testLine.substring(6, j).trim();
+								String tHost = testLine.substring(i + 6, j)
+										.trim();
 								ret = new URL("http://" + tHost + path);
 								break;
 							} else {
@@ -280,6 +277,7 @@ public class Proxy extends Service implements Runnable {
 							break;
 						}
 						lastLine = line;
+						avail = reader.available();
 					}
 				} else {
 					Log.d(TAG, "unknown method: " + strings[0]);
@@ -300,6 +298,7 @@ public class Proxy extends Service implements Runnable {
 				// data behind header does not need a read line..
 				// we should read from InputStream directly!
 				// buffer.append(reader.readLine() + "\r\n");
+				avail = reader.available();
 			}
 			return ret;
 		}
@@ -420,10 +419,7 @@ public class Proxy extends Service implements Runnable {
 								}
 
 								tHost = url.getHost();
-								tPort = url.getPort();
-								if (tPort < 0) {
-									tPort = PORT_HTTP;
-								}
+								tPort = p;
 								Log.d(TAG, "new socket: " + url.toString());
 								this.state = STATE_NORMAL;
 								this.remote = new Socket();
