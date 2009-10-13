@@ -19,7 +19,6 @@
 package de.ub0r.android.adBlock;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -207,21 +206,29 @@ public class Proxy extends Service implements Runnable {
 		 * @throws IOException
 		 *             inner IOException
 		 */
-		private URL readHeader(final BufferedReader reader,
+		private URL readHeader(final BufferedInputStream reader,
 				final StringBuilder buffer) throws IOException {
 			URL ret = null;
 			String[] strings;
+			int avail;
+			byte[] buf = new byte[CopyStream.BUFFSIZE];
 			// read first line
 			if (this.state == STATE_CLOSED_OUT) {
 				return null;
 			}
-			String line = reader.readLine();
-			if (line == null) {
+			//avail = reader.available();
+			//if (avail > CopyStream.BUFFSIZE) {
+			//	avail = CopyStream.BUFFSIZE;
+			//}
+			avail = reader.read(buf, 0, 8);
+			if (avail < 1) {
 				return null;
 			}
-			buffer.append(line + "\r\n");
+			String line = new String(buf, 0, 8);
+			buffer.append(line);
 			strings = line.split(" ");
 			if (strings.length > 1) {
+				// TODO: read rest of line
 				if (strings[0].equals("CONNECT")) {
 					String targetHost = strings[1];
 					int targetPort = PORT_HTTPS;
@@ -241,19 +248,38 @@ public class Proxy extends Service implements Runnable {
 						path = strings[1];
 					}
 					// read header
-					while (true) {
-						line = reader.readLine();
-						buffer.append(line + "\r\n");
-						if (line.length() == 0) {
-							break;
+					int i;
+					avail = reader.available();
+					String lastLine = "";
+					String testLine;
+					while (avail > 0) {
+						if (avail > CopyStream.BUFFSIZE) {
+							avail = CopyStream.BUFFSIZE;
 						}
-						if (line.startsWith("Host:")) {
-							strings = line.split(" ");
-							if (strings.length > 1) {
-								ret = new URL("http://" + strings[1] + path);
+						avail = reader.read(buf, 0, avail);
+						// FIXME: this may break
+						line = new String(buf, 0, avail);
+						buffer.append(line);
+						testLine = lastLine + line;
+						//if (line.length() == 0) {
+						//	break;
+						//}
+						i = testLine.indexOf("\nHost: ");
+						if (i >= 0) {
+							int j = testLine.indexOf("\n", i + 6);
+							if (j > 0) {
+								String tHost = testLine.substring(6, j).trim();
+								ret = new URL("http://" + tHost + path);
+								break;
+							} else {
+								// test for "Host:" again with longer buffer
+								line = lastLine + line;
 							}
+						}
+						if (line.indexOf("\r\n\r\n") >= 0) {
 							break;
 						}
+						lastLine = line;
 					}
 				} else {
 					Log.d(TAG, "unknown method: " + strings[0]);
@@ -262,11 +288,18 @@ public class Proxy extends Service implements Runnable {
 			strings = null;
 
 			// copy rest of reader's buffer
-			while (reader.ready()) {
+			avail = reader.available();
+			while (avail > 0) {
+				if (avail > CopyStream.BUFFSIZE) {
+					avail = CopyStream.BUFFSIZE;
+				}
+				avail = reader.read(buf, 0, avail);
+				// FIXME: this may break!
+				buffer.append(new String(buf, 0, avail));
 				// FIXME this read line breaks everything!
 				// data behind header does not need a read line..
 				// we should read from InputStream directly!
-				buffer.append(reader.readLine() + "\r\n");
+				// buffer.append(reader.readLine() + "\r\n");
 			}
 			return ret;
 		}
@@ -324,15 +357,13 @@ public class Proxy extends Service implements Runnable {
 		 */
 		@Override
 		public void run() {
-			InputStream lInStream;
+			BufferedInputStream lInStream;
 			OutputStream lOutStream;
-			BufferedReader lReader;
 			BufferedWriter lWriter;
 			try {
-				lInStream = this.local.getInputStream();
+				lInStream = new BufferedInputStream(
+						this.local.getInputStream(), CopyStream.BUFFSIZE);
 				lOutStream = this.local.getOutputStream();
-				lReader = new BufferedReader(new InputStreamReader(lInStream),
-						CopyStream.BUFFSIZE);
 				lWriter = new BufferedWriter(
 						new OutputStreamWriter(lOutStream), CopyStream.BUFFSIZE);
 			} catch (IOException e) {
@@ -352,7 +383,7 @@ public class Proxy extends Service implements Runnable {
 				boolean connectSSL = false;
 				while (this.local.isConnected()) {
 					buffer = new StringBuilder();
-					url = this.readHeader(lReader, buffer);
+					url = this.readHeader(lInStream, buffer);
 					if (buffer.length() == 0) {
 						break;
 					}
