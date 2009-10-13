@@ -115,7 +115,7 @@ public class Proxy extends Service implements Runnable {
 			private final OutputStream writer;
 
 			/** Size of buffer. */
-			private static final short BUFFSIZE = 512;
+			private static final short BUFFSIZE = 256;
 
 			/**
 			 * Constructor.
@@ -217,6 +217,8 @@ public class Proxy extends Service implements Runnable {
 			}
 			avail = reader.available();
 			if (avail > CopyStream.BUFFSIZE) {
+				avail = CopyStream.BUFFSIZE;
+			} else if (avail == 0) {
 				avail = CopyStream.BUFFSIZE;
 			}
 			avail = reader.read(buf, 0, avail);
