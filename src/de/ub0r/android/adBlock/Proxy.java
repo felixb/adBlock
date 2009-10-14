@@ -158,8 +158,8 @@ public class Proxy extends Service implements Runnable {
 					// FIXME: java.net.SocketException: Broken pipe
 					// no idea, what causes this :/
 					Connection c = Connection.this;
+					String s = new String(buf, 0, read);
 					Log.e(TAG, null, e);
-					// Log.d(TAG, new String(buf, 0, read));
 				}
 			}
 		}
