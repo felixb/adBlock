@@ -28,6 +28,7 @@
 	<string name="import_">Import</string>
 	<string name="import_url_">Import URL?</string>
 	<string name="export_">Export</string>
+	<string name="more_">More Apps..</string>
 	<string name="about_">About</string>
 	<string name="about0">AdBlock blocks HTTP requests. It may be used
 		for blocking unwanted ads on webpages.
@@ -49,9 +50,14 @@
 	<string name="source_">Sourcescode:</string>
 	<string name="website_">Website:</string>
 	<string name="website">http://code.google.com/p/andblock/</string>
+	<string name="donate_mail">f@ub0r.de</string>
+	<string name="donate_subject">I'm the donator. My IMEI hash is...</string>
 	<string name="donate_">Donate</string>
 	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=8668940
 	</string>
+	<string name="postdonate">To remove ads, you need to send me the MD5 hash of your IMEI (unique id of your phone). This hash is a one-way-function. It is not traceable back to you. I'll remove your ads with the next release.
+	</string>
+	<string name="send_">Send</string>
 	<string-array name="itemDialog">
 		<item>Edit</item>
 		<item>Delete</item>

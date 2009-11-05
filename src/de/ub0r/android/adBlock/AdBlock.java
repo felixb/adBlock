@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -177,7 +178,7 @@ public class AdBlock extends Activity implements OnClickListener,
 		this.preferences = PreferenceManager.getDefaultSharedPreferences(this);
 		// display changelog?
 		String v0 = this.preferences.getString(PREFS_LAST_RUN, "");
-		String v1 = this.getResources().getString(R.string.app_version);
+		String v1 = this.getString(R.string.app_version);
 		if (!v0.equals(v1)) {
 			SharedPreferences.Editor editor = this.preferences.edit();
 			editor.putString(PREFS_LAST_RUN, v1);
@@ -270,10 +271,6 @@ public class AdBlock extends Activity implements OnClickListener,
 					R.id.import_url)).getText().toString();
 			new Importer().execute((String[]) null);
 			break;
-		case R.id.btn_donate:
-			Uri uri = Uri.parse(this.getString(R.string.donate_url));
-			this.startActivity(new Intent(Intent.ACTION_VIEW, uri));
-			break;
 		default:
 			break;
 		}
@@ -307,6 +304,22 @@ public class AdBlock extends Activity implements OnClickListener,
 			return true;
 		case R.id.item_import:
 			this.showDialog(DIALOG_IMPORT);
+			return true;
+		case R.id.item_donate:
+			try {
+				this.startActivity(new Intent(Intent.ACTION_VIEW, Uri
+						.parse(this.getString(R.string.donate_url))));
+			} catch (ActivityNotFoundException e) {
+				Log.e(TAG, "no browser", e);
+			}
+			return true;
+		case R.id.item_more:
+			try {
+				this.startActivity(new Intent(Intent.ACTION_VIEW, Uri
+						.parse("market://search?q=pub:\"Felix Bechstein\"")));
+			} catch (ActivityNotFoundException e) {
+				Log.e(TAG, "no market", e);
+			}
 			return true;
 			// case R.id.item_export:
 			// try {
@@ -348,32 +361,26 @@ public class AdBlock extends Activity implements OnClickListener,
 	 */
 	@Override
 	protected final Dialog onCreateDialog(final int id) {
-		Dialog myDialog;
+		Dialog d;
 		switch (id) {
 		case DIALOG_ABOUT:
-			myDialog = new Dialog(this);
-			myDialog.setContentView(R.layout.about);
-			myDialog.setTitle(this.getResources().getString(R.string.about_)
-					+ " v"
-					+ this.getResources().getString(R.string.app_version));
-			((Button) myDialog.findViewById(R.id.btn_donate))
-					.setOnClickListener(this);
-			break;
+			d = new Dialog(this);
+			d.setContentView(R.layout.about);
+			d.setTitle(this.getString(R.string.about_) + " v"
+					+ this.getString(R.string.app_version));
+			return d;
 		case DIALOG_IMPORT:
-			myDialog = new Dialog(this);
-			myDialog.setContentView(R.layout.import_url);
-			myDialog.setTitle(this.getResources().getString(
-					R.string.import_url_));
-			((Button) myDialog.findViewById(R.id.ok)).setOnClickListener(this);
-			((Button) myDialog.findViewById(R.id.cancel))
-					.setOnClickListener(this);
-			break;
+			d = new Dialog(this);
+			d.setContentView(R.layout.import_url);
+			d.setTitle(this.getString(R.string.import_url_));
+			((Button) d.findViewById(R.id.ok)).setOnClickListener(this);
+			((Button) d.findViewById(R.id.cancel)).setOnClickListener(this);
+			return d;
 		case DIALOG_UPDATE:
-			myDialog = new Dialog(this);
-			myDialog.setContentView(R.layout.update);
-			myDialog.setTitle(R.string.changelog_);
-			LinearLayout layout = (LinearLayout) myDialog
-					.findViewById(R.id.base_view);
+			d = new Dialog(this);
+			d.setContentView(R.layout.update);
+			d.setTitle(R.string.changelog_);
+			LinearLayout layout = (LinearLayout) d.findViewById(R.id.base_view);
 			TextView tw;
 			String[] changes = this.getResources().getStringArray(
 					R.array.updates);
@@ -382,11 +389,10 @@ public class AdBlock extends Activity implements OnClickListener,
 				tw.setText(c);
 				layout.addView(tw);
 			}
-			break;
+			return d;
 		default:
-			myDialog = null;
+			return null;
 		}
-		return myDialog;
 	}
 
 	/**
