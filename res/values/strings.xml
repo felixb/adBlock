@@ -51,13 +51,14 @@
 	<string name="website_">Website:</string>
 	<string name="website">http://code.google.com/p/andblock/</string>
 	<string name="donate_mail">f@ub0r.de</string>
-	<string name="donate_subject">I'm the donator. My IMEI hash is...</string>
+	<string name="donate_subject">I\'m the donator. My IMEI hash is...</string>
 	<string name="donate_">Donate</string>
 	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=8668940
 	</string>
-	<string name="postdonate">To remove ads, you need to send me the MD5 hash of your IMEI (unique id of your phone). This hash is a one-way-function. It is not traceable back to you. I'll remove your ads with the next release.
+	<string name="postdonate">To remove ads, you need to send me the MD5 hash of your IMEI (unique id of your phone). This hash is a one-way-function. It is not traceable back to you. I\'ll remove your ads with the next release.
 	</string>
 	<string name="send_">Send</string>
+	<string name="notify_proxy">AdBlock Proxy</string>
 	<string-array name="itemDialog">
 		<item>Edit</item>
 		<item>Delete</item>

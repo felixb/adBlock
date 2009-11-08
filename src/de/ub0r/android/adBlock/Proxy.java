@@ -30,6 +30,8 @@ import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -115,7 +117,7 @@ public class Proxy extends Service implements Runnable {
 			private final OutputStream writer;
 
 			/** Size of buffer. */
-			private static final short BUFFSIZE = 256;
+			private static final int BUFFSIZE = 32768;
 
 			/**
 			 * Constructor.
@@ -521,6 +523,18 @@ public class Proxy extends Service implements Runnable {
 
 		// Don't kill me!
 		this.setForeground(true);
+		final Notification notification = new Notification(R.drawable.icon, "",
+				System.currentTimeMillis()); // FIXME: new icon
+		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				new Intent(this, AdBlock.class), 0);
+		notification.setLatestEventInfo(this, this
+				.getString(R.string.notify_proxy), "", contentIntent);
+		notification.defaults |= Notification.FLAG_NO_CLEAR;
+		try {
+			new HelperAPI5().startForeground(this, 0, notification);
+		} catch (VerifyError e) {
+			Log.i(TAG, "no api 5");
+		}
 
 		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
