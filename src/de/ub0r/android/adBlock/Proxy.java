@@ -159,9 +159,9 @@ public class Proxy extends Service implements Runnable {
 				} catch (IOException e) {
 					// FIXME: java.net.SocketException: Broken pipe
 					// no idea, what causes this :/
-					Connection c = Connection.this;
+					// Connection c = Connection.this;
 					String s = new String(buf, 0, read);
-					Log.e(TAG, null, e);
+					Log.e(TAG, s, e);
 				}
 			}
 		}
@@ -228,7 +228,16 @@ public class Proxy extends Service implements Runnable {
 				return null;
 			}
 			String line = new String(buf, 0, avail);
-			buffer.append(line);
+			String testLine = line;
+			int i = line.indexOf(" http://");
+			if (i > 0) {
+				// remove "http://host:port" from line
+				int j = line.indexOf('/', i + 9);
+				if (j > i) {
+					testLine = line.substring(0, i + 1) + line.substring(j);
+				}
+			}
+			buffer.append(testLine);
 			strings = line.split(" ");
 			if (strings.length > 1) {
 				// TODO: read rest of line
@@ -251,18 +260,8 @@ public class Proxy extends Service implements Runnable {
 						path = strings[1];
 					}
 					// read header
-					int i;
-					avail = reader.available();
 					String lastLine = line;
-					String testLine;
-					while (avail > 0) {
-						if (avail > CopyStream.BUFFSIZE) {
-							avail = CopyStream.BUFFSIZE;
-						}
-						avail = reader.read(buf, 0, avail);
-						// FIXME: this may break
-						line = new String(buf, 0, avail);
-						buffer.append(line);
+					do {
 						testLine = lastLine + line;
 						i = testLine.indexOf("\nHost: ");
 						if (i >= 0) {
@@ -282,7 +281,16 @@ public class Proxy extends Service implements Runnable {
 						}
 						lastLine = line;
 						avail = reader.available();
-					}
+						if (avail > 0) {
+							if (avail > CopyStream.BUFFSIZE) {
+								avail = CopyStream.BUFFSIZE;
+							}
+							avail = reader.read(buf, 0, avail);
+							// FIXME: this may break
+							line = new String(buf, 0, avail);
+							buffer.append(line);
+						}
+					} while (avail > 0);
 				} else {
 					Log.d(TAG, "unknown method: " + strings[0]);
 				}
