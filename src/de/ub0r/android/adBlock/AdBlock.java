@@ -64,7 +64,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	/** Tag for output. */
 	private static final String TAG = "AdBlock";
 
-	/** Prefs: name for last version run */
+	/** Prefs: name for last version run. */
 	private static final String PREFS_LAST_RUN = "lastrun";
 	/** Preferences: import url. */
 	private static final String PREFS_IMPORT_URL = "importurl";
@@ -208,6 +208,8 @@ public class AdBlock extends Activity implements OnClickListener,
 		lv.setAdapter(this.adapter);
 		lv.setTextFilterEnabled(true);
 		lv.setOnItemClickListener(this);
+
+		this.startService(new Intent(this, Proxy.class));
 	}
 
 	/** Save Preferences. */
