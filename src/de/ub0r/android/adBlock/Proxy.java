@@ -553,7 +553,7 @@ public class Proxy extends Service implements Runnable {
 			this.proxy.start();
 		} else {
 			Toast.makeText(this,
-					this.getString(R.string.proxy_running) + this.port,
+					this.getString(R.string.proxy_running) + " " + this.port,
 					Toast.LENGTH_SHORT).show();
 			if (portChanged) {
 				this.proxy.interrupt();
