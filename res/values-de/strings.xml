@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<!--
+		Copyright (C) 2009 Felix Bechstein
+	-->
+	<!--
+		This file is part of AdBlock. This program is free software; you can
+		redistribute it and/or modify it under the terms of the GNU General
+		Public License as published by the Free Software Foundation; either
+		version 3 of the License, or (at your option) any later version.
+	-->
+	<!--
+		This program is distributed in the hope that it will be useful, but
+		WITHOUT ANY WARRANTY; without even the implied warranty of
+		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+		General Public License for more details. You should have received a
+		copy of the GNU General Public License along with this program; If
+		not, see <http://www.gnu.org/licenses/>.
+	-->
+<resources>
+	<string name="stop_">Stopp</string>
+	<string name="add_filter">Filter hinzu</string>
+	<string name="more_">Mehr Apps..</string>
+	<string name="about_">Über</string>
+	<string name="about0">AdBlock blockt HTTP Anfragen. Es kann dazu benutzt werden ungewollte Werbung auf Webseiten zu blocken.
+		Es blockt NICHT die Werbung in den Apps.
+		Admob und Google sind auf einer permanenten Whitelist!
+	</string>
+	<string name="about1">Setze die Proxy-Einstellung deines APNs auf localhost mit dem in der App gestzten Port, zB. localhost:8080.
+	</string>
+	<string name="about2">Liebes Google, bitte melde dich bei mir, bevor du diese App aus dem Market löschst.
+	</string>
+	<string name="author_">Autor:</string>
+	<string name="license">GPLv3 - siehe
+		http://www.gnu.org/licenses/gpl-3.0.txt</string>
+	<string name="license_">Lizens:</string>
+	<string name="donate_">Spenden</string>
+	<string name="proxy_running">Proxy läuft auf Port </string>
+	<string name="proxy_stopped">Proxy gestoppt</string>
+	<string name="default_filter">/ads/\n.ads/\nbobmobile</string>
+	<string-array name="itemDialog">
+		<item>Ändern</item>
+		<item>Löschen</item>
+	</string-array>
+</resources>

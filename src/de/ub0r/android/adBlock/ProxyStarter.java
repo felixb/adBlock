@@ -32,13 +32,7 @@ import android.content.Intent;
 public class ProxyStarter extends BroadcastReceiver {
 
 	/**
-	 * This method is called when the BroadcastReceiver is receiving an Intent
-	 * broadcast.
-	 * 
-	 * @param context
-	 *            The Context in which the receiver is running.
-	 * @param intent
-	 *            The Intent being received.
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onReceive(final Context context, final Intent intent) {

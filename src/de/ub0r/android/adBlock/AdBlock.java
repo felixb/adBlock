@@ -165,10 +165,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Called when the activity is first created.
-	 * 
-	 * @param savedInstanceState
-	 *            saved InstanceState
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onCreate(final Bundle savedInstanceState) {
@@ -188,8 +185,8 @@ public class AdBlock extends Activity implements OnClickListener,
 
 		((EditText) this.findViewById(R.id.port)).setText(this.preferences
 				.getString(Proxy.PREFS_PORT, "8080"));
-		String f = this.preferences.getString(Proxy.PREFS_FILTER,
-				"/ads/\n.ads/\nbobmobile");
+		String f = this.preferences.getString(Proxy.PREFS_FILTER, this
+				.getString(R.string.default_filter));
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
 				this.filter.add(s);
@@ -229,7 +226,9 @@ public class AdBlock extends Activity implements OnClickListener,
 		editor.commit();
 	}
 
-	/** Called on pause. */
+	/**
+	 * {@inheritDoc}
+	 */
 	@Override
 	public final void onPause() {
 		super.onPause();
@@ -237,10 +236,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * OnClickListener.
-	 * 
-	 * @param v
-	 *            view
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onClick(final View v) {
@@ -279,11 +275,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Create menu.
-	 * 
-	 * @param menu
-	 *            menu to inflate
-	 * @return ok/fail?
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final boolean onCreateOptionsMenu(final Menu menu) {
@@ -293,11 +285,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Handles item selections.
-	 * 
-	 * @param item
-	 *            menu item
-	 * @return done?
+	 * {@inheritDoc}
 	 */
 	public final boolean onOptionsItemSelected(final MenuItem item) {
 		switch (item.getItemId()) {
@@ -355,11 +343,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Called to create dialog.
-	 * 
-	 * @param id
-	 *            Dialog id
-	 * @return dialog
+	 * {@inheritDoc}
 	 */
 	@Override
 	protected final Dialog onCreateDialog(final int id) {
@@ -398,13 +382,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Provides an opportunity to prepare a managed dialog before it is being
-	 * shown.
-	 * 
-	 * @param id
-	 *            The id of the managed dialog.
-	 * @param dialog
-	 *            The dialog.
+	 * {@inheritDoc}
 	 */
 	@Override
 	protected final void onPrepareDialog(final int id, final Dialog dialog) {
@@ -420,16 +398,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	}
 
 	/**
-	 * Handle clicked ListItem.
-	 * 
-	 * @param parent
-	 *            parent AdapterView
-	 * @param v
-	 *            View
-	 * @param position
-	 *            Position
-	 * @param id
-	 *            id
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onItemClick(final AdapterView<?> parent, final View v,

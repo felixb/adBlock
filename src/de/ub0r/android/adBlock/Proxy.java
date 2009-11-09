@@ -31,8 +31,10 @@ import java.net.URL;
 import java.util.ArrayList;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -118,6 +120,8 @@ public class Proxy extends Service implements Runnable {
 
 			/** Size of buffer. */
 			private static final int BUFFSIZE = 32768;
+			/** Size of header buffer. */
+			private static final int HEADERBUFFSIZE = 1024;
 
 			/**
 			 * Constructor.
@@ -160,8 +164,8 @@ public class Proxy extends Service implements Runnable {
 					// FIXME: java.net.SocketException: Broken pipe
 					// no idea, what causes this :/
 					// Connection c = Connection.this;
-					String s = new String(buf, 0, read);
-					Log.e(TAG, s, e);
+					// String s = new String(buf, 0, read);
+					Log.e(TAG, null, e);
 				}
 			}
 		}
@@ -212,16 +216,16 @@ public class Proxy extends Service implements Runnable {
 			URL ret = null;
 			String[] strings;
 			int avail;
-			byte[] buf = new byte[CopyStream.BUFFSIZE];
+			byte[] buf = new byte[CopyStream.HEADERBUFFSIZE];
 			// read first line
 			if (this.state == STATE_CLOSED_OUT) {
 				return null;
 			}
 			avail = reader.available();
-			if (avail > CopyStream.BUFFSIZE) {
-				avail = CopyStream.BUFFSIZE;
+			if (avail > CopyStream.HEADERBUFFSIZE) {
+				avail = CopyStream.HEADERBUFFSIZE;
 			} else if (avail == 0) {
-				avail = CopyStream.BUFFSIZE;
+				avail = CopyStream.HEADERBUFFSIZE;
 			}
 			avail = reader.read(buf, 0, avail);
 			if (avail < 1) {
@@ -240,7 +244,6 @@ public class Proxy extends Service implements Runnable {
 			buffer.append(testLine);
 			strings = line.split(" ");
 			if (strings.length > 1) {
-				// TODO: read rest of line
 				if (strings[0].equals("CONNECT")) {
 					String targetHost = strings[1];
 					int targetPort = PORT_HTTPS;
@@ -282,8 +285,8 @@ public class Proxy extends Service implements Runnable {
 						lastLine = line;
 						avail = reader.available();
 						if (avail > 0) {
-							if (avail > CopyStream.BUFFSIZE) {
-								avail = CopyStream.BUFFSIZE;
+							if (avail > CopyStream.HEADERBUFFSIZE) {
+								avail = CopyStream.HEADERBUFFSIZE;
 							}
 							avail = reader.read(buf, 0, avail);
 							// FIXME: this may break
@@ -300,16 +303,12 @@ public class Proxy extends Service implements Runnable {
 			// copy rest of reader's buffer
 			avail = reader.available();
 			while (avail > 0) {
-				if (avail > CopyStream.BUFFSIZE) {
-					avail = CopyStream.BUFFSIZE;
+				if (avail > CopyStream.HEADERBUFFSIZE) {
+					avail = CopyStream.HEADERBUFFSIZE;
 				}
 				avail = reader.read(buf, 0, avail);
 				// FIXME: this may break!
 				buffer.append(new String(buf, 0, avail));
-				// FIXME this read line breaks everything!
-				// data behind header does not need a read line..
-				// we should read from InputStream directly!
-				// buffer.append(reader.readLine() + "\r\n");
 				avail = reader.available();
 			}
 			return ret;
@@ -364,7 +363,7 @@ public class Proxy extends Service implements Runnable {
 		}
 
 		/**
-		 * Run by Thread.start().
+		 * {@inheritDoc}
 		 */
 		@Override
 		public void run() {
@@ -505,12 +504,7 @@ public class Proxy extends Service implements Runnable {
 	}
 
 	/**
-	 * Default Implementation.
-	 * 
-	 * @param intent
-	 *            called Intent
-	 * @return IBinder
-	 * @see android.app.Service#onBind(android.content.Intent)
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final IBinder onBind(final Intent intent) {
@@ -518,12 +512,7 @@ public class Proxy extends Service implements Runnable {
 	}
 
 	/**
-	 * Called on start.
-	 * 
-	 * @param intent
-	 *            Intent called
-	 * @param startId
-	 *            start ID
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onStart(final Intent intent, final int startId) {
@@ -531,8 +520,8 @@ public class Proxy extends Service implements Runnable {
 
 		// Don't kill me!
 		this.setForeground(true);
-		final Notification notification = new Notification(R.drawable.icon, "",
-				System.currentTimeMillis()); // FIXME: new icon
+		final Notification notification = new Notification(
+				R.drawable.stat_notify_proxy, "", System.currentTimeMillis());
 		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
 				new Intent(this, AdBlock.class), 0);
 		notification.setLatestEventInfo(this, this
@@ -563,7 +552,8 @@ public class Proxy extends Service implements Runnable {
 			this.proxy = new Thread(this);
 			this.proxy.start();
 		} else {
-			Toast.makeText(this, "proxy running on port " + this.port,
+			Toast.makeText(this,
+					this.getString(R.string.proxy_running) + this.port,
 					Toast.LENGTH_SHORT).show();
 			if (portChanged) {
 				this.proxy.interrupt();
@@ -574,17 +564,19 @@ public class Proxy extends Service implements Runnable {
 	}
 
 	/**
-	 * Called on destroy.
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onDestroy() {
 		super.onDestroy();
-		Toast.makeText(this, "stopping proxy..", Toast.LENGTH_LONG).show();
+		Toast.makeText(this, R.string.proxy_stopped, Toast.LENGTH_LONG).show();
 		this.stop = true;
+		((NotificationManager) this
+				.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
 	}
 
 	/**
-	 * Run by Thread.start().
+	 * {@inheritDoc}
 	 */
 	@Override
 	public final void run() {
