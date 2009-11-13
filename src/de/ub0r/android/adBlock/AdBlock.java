@@ -363,19 +363,26 @@ public class AdBlock extends Activity implements OnClickListener,
 			((Button) d.findViewById(R.id.cancel)).setOnClickListener(this);
 			return d;
 		case DIALOG_UPDATE:
-			d = new Dialog(this);
-			d.setContentView(R.layout.update);
-			d.setTitle(R.string.changelog_);
-			LinearLayout layout = (LinearLayout) d.findViewById(R.id.base_view);
-			TextView tw;
-			String[] changes = this.getResources().getStringArray(
+			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle(R.string.changelog_);
+			final String[] changes = this.getResources().getStringArray(
 					R.array.updates);
-			for (String c : changes) {
-				tw = new TextView(this);
-				tw.setText(c);
-				layout.addView(tw);
+			final StringBuilder buf = new StringBuilder(changes[0]);
+			for (int i = 1; i < changes.length; i++) {
+				buf.append("\n\n");
+				buf.append(changes[i]);
 			}
-			return d;
+			builder.setIcon(android.R.drawable.ic_menu_info_details);
+			builder.setMessage(buf.toString());
+			builder.setCancelable(true);
+			builder.setPositiveButton(android.R.string.ok,
+					new DialogInterface.OnClickListener() {
+						public void onClick(final DialogInterface dialog,
+								final int id) {
+							dialog.cancel();
+						}
+					});
+			return builder.create();
 		default:
 			return null;
 		}
