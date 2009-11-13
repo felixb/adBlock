@@ -101,7 +101,7 @@ public class AdBlock extends Activity implements OnClickListener,
 	 * 
 	 * @author Felix Bechstein
 	 */
-	private class Importer extends AsyncTask<String, Boolean, Boolean> {
+	class Importer extends AsyncTask<String, Boolean, Boolean> {
 		/** Error message. */
 		private String message = "";
 

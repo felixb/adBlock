@@ -86,7 +86,7 @@ public class Proxy extends Service implements Runnable {
 	 * 
 	 * @author Felix Bechstein
 	 */
-	private class Connection implements Runnable {
+	class Connection implements Runnable {
 
 		// TODO: cache object.refs
 		// TODO: no private object.refs accessed by inner classes
