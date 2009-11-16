@@ -49,6 +49,8 @@ import android.widget.Toast;
  * @author Felix Bechstein
  */
 public class Proxy extends Service implements Runnable {
+	/** Tag for output. */
+	private static final String TAG = "AdBlock.Proxy";
 
 	/** Preferences: Port. */
 	static final String PREFS_PORT = "port";
@@ -77,9 +79,6 @@ public class Proxy extends Service implements Runnable {
 	private ArrayList<String> filter = new ArrayList<String>();
 	/** Stop proxy? */
 	private boolean stop = false;
-
-	/** Tag for output. */
-	private static final String TAG = "AdBlock.Proxy";
 
 	/**
 	 * Connection handles a single HTTP Connection. Run this as a Thread.
@@ -518,19 +517,30 @@ public class Proxy extends Service implements Runnable {
 	public final void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
 
-		// Don't kill me!
-		this.setForeground(true);
-		final Notification notification = new Notification(
-				R.drawable.stat_notify_proxy, "", System.currentTimeMillis());
-		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
-				new Intent(this, AdBlock.class), 0);
-		notification.setLatestEventInfo(this, this
-				.getString(R.string.notify_proxy), "", contentIntent);
-		notification.defaults |= Notification.FLAG_NO_CLEAR;
+		HelperAPI5 helperAPI5 = null;
 		try {
-			new HelperAPI5().startForeground(this, 0, notification);
+			helperAPI5 = new HelperAPI5();
 		} catch (VerifyError e) {
 			Log.i(TAG, "no api 5");
+		}
+
+		// Don't kill me!
+		if (helperAPI5 == null) {
+			this.setForeground(true);
+		} else {
+			final Notification notification = new Notification(
+					R.drawable.stat_notify_proxy, "", System
+							.currentTimeMillis());
+			final PendingIntent contentIntent = PendingIntent.getActivity(this,
+					0, new Intent(this, AdBlock.class), 0);
+			notification.setLatestEventInfo(this, this
+					.getString(R.string.notify_proxy), "", contentIntent);
+			notification.defaults |= Notification.FLAG_NO_CLEAR;
+			try {
+				helperAPI5.startForeground(this, 0, notification);
+			} catch (NoSuchMethodError e) {
+				this.setForeground(true);
+			}
 		}
 
 		SharedPreferences preferences = PreferenceManager

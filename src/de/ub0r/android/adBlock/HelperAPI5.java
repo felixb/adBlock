@@ -42,18 +42,4 @@ public class HelperAPI5 {
 			final Notification notification) {
 		service.startForeground(id, notification);
 	}
-
-	/**
-	 * Run Service in background.
-	 * 
-	 * @see Service.stopForeground()
-	 * @param service
-	 *            Service
-	 * @param removeNotification
-	 *            remove notification?
-	 */
-	final void stopForeground(final Service service,
-			final boolean removeNotification) {
-		service.stopForeground(removeNotification);
-	}
 }
