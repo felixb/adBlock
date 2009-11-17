@@ -128,7 +128,9 @@ public class AdBlock extends Activity implements OnClickListener,
 					String s = reader.readLine();
 					if (s == null) {
 						break;
-					} else if (s.length() > 0) {
+					}
+					s = s.trim();
+					if (s.length() > 0) {
 						AdBlock.this.filter.add(s);
 					}
 				}
