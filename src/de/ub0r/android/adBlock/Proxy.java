@@ -520,7 +520,11 @@ public class Proxy extends Service implements Runnable {
 		HelperAPI5 helperAPI5 = null;
 		try {
 			helperAPI5 = new HelperAPI5();
+			if (!helperAPI5.isAvailable()) {
+				helperAPI5 = null;
+			}
 		} catch (VerifyError e) {
+			helperAPI5 = null;
 			Log.i(TAG, "no api 5");
 		}
 
@@ -536,11 +540,6 @@ public class Proxy extends Service implements Runnable {
 			notification.setLatestEventInfo(this, this
 					.getString(R.string.notify_proxy), "", contentIntent);
 			notification.defaults |= Notification.FLAG_NO_CLEAR;
-			try {
-				helperAPI5.startForeground(this, 0, notification);
-			} catch (NoSuchMethodError e) {
-				this.setForeground(true);
-			}
 		}
 
 		SharedPreferences preferences = PreferenceManager

@@ -18,8 +18,11 @@
  */
 package de.ub0r.android.adBlock;
 
+import java.lang.reflect.Method;
+
 import android.app.Notification;
 import android.app.Service;
+import android.util.Log;
 
 /**
  * Helper class to set/unset background for api5 systems.
@@ -27,6 +30,33 @@ import android.app.Service;
  * @author flx
  */
 public class HelperAPI5 {
+	/** Tag for output. */
+	private static final String TAG = "AdBlock.api5";
+
+	/** Error message if API5 is not available. */
+	private static final String ERRORMESG = "no API5 available";
+
+	/**
+	 * Check whether API5 is available.
+	 * 
+	 * @return true if API5 is available
+	 */
+	final boolean isAvailable() {
+		try {
+			Method mDebugMethod = Service.class.getMethod("startForeground",
+					new Class[] { Integer.TYPE, Notification.class });
+			/* success, this is a newer device */
+			if (mDebugMethod != null) {
+				return true;
+			}
+		} catch (Throwable e) {
+			Log.d(TAG, ERRORMESG, e);
+			throw new VerifyError(ERRORMESG);
+		}
+		Log.d(TAG, ERRORMESG);
+		throw new VerifyError(ERRORMESG);
+	}
+
 	/**
 	 * Run Service in foreground.
 	 * 
