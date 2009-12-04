@@ -76,7 +76,7 @@ public class Proxy extends Service implements Runnable {
 	/** Proxy's port. */
 	private int port = -1;
 	/** Proxy's filter. */
-	private ArrayList<String> filter = new ArrayList<String>();
+	ArrayList<String> filter = new ArrayList<String>();
 	/** Stop proxy? */
 	private boolean stop = false;
 
@@ -85,10 +85,10 @@ public class Proxy extends Service implements Runnable {
 	 * 
 	 * @author Felix Bechstein
 	 */
-	class Connection implements Runnable {
+	private class Connection implements Runnable {
 
-		// TODO: cache object.refs
-		// TODO: no private object.refs accessed by inner classes
+		// cache object.refs
+		// no private object.refs accessed by inner classes
 		// TODO: reduce object creation
 
 		/** Local Socket. */
@@ -142,19 +142,21 @@ public class Proxy extends Service implements Runnable {
 			public void run() {
 				byte[] buf = new byte[BUFFSIZE];
 				int read = 0;
+				final InputStream r = this.reader;
+				final OutputStream w = this.writer;
 				try {
 					while (true) {
-						read = this.reader.available();
+						read = r.available();
 						if (read < 1 || read > BUFFSIZE) {
 							read = BUFFSIZE;
 						}
-						read = this.reader.read(buf, 0, read);
+						read = r.read(buf, 0, read);
 						if (read < 0) {
 							break;
 						}
-						this.writer.write(buf, 0, read);
-						if (this.reader.available() < 1) {
-							this.writer.flush();
+						w.write(buf, 0, read);
+						if (r.available() < 1) {
+							w.flush();
 						}
 					}
 					Connection.this.close(Connection.STATE_CLOSED_OUT);
@@ -190,8 +192,10 @@ public class Proxy extends Service implements Runnable {
 			if (url.indexOf("admob") >= 0 || url.indexOf("google") >= 0) {
 				return false;
 			}
-			for (String f : Proxy.this.filter) {
-				if (url.indexOf(f) >= 0) {
+			final ArrayList<String> f = Proxy.this.filter;
+			final int s = f.size();
+			for (int i = 0; i < s; i++) {
+				if (url.indexOf(f.get(i)) >= 0) {
 					return true;
 				}
 			}
@@ -398,7 +402,6 @@ public class Proxy extends Service implements Runnable {
 					}
 					if (this.local.isConnected() && rThread != null
 							&& !rThread.isAlive()) {
-						// TODO: is this a dead branch? if rThread is dead,
 						// socket should be closed allready..
 						Log.d(TAG, "close dead remote");
 						if (connectSSL) {
@@ -476,8 +479,6 @@ public class Proxy extends Service implements Runnable {
 							} catch (IOException e) {
 								Log.d(TAG, buffer.toString(), e);
 							}
-							// FIXME: exceptions here!
-							// sync does not fix anything
 						}
 					}
 				}
@@ -549,25 +550,29 @@ public class Proxy extends Service implements Runnable {
 		this.port = p;
 
 		String f = preferences.getString(PREFS_FILTER, "");
-		this.filter.clear();
+		final ArrayList<String> fl = this.filter;
+		fl.clear();
 		for (String s : f.split("\n")) {
 			if (s.length() > 0) {
-				this.filter.add(s);
+				fl.add(s);
 			}
 		}
 		if (this.proxy == null) {
 			// Toast.makeText(this, "starting proxy on port: " + this.port,
 			// Toast.LENGTH_SHORT).show();
-			this.proxy = new Thread(this);
-			this.proxy.start();
+			final Thread pr = new Thread(this);
+			pr.start();
+			this.proxy = pr;
 		} else {
 			Toast.makeText(this,
 					this.getString(R.string.proxy_running) + " " + this.port,
 					Toast.LENGTH_SHORT).show();
 			if (portChanged) {
-				this.proxy.interrupt();
-				this.proxy = new Thread(this);
-				this.proxy.start();
+				Thread pr = this.proxy;
+				pr.interrupt();
+				pr = new Thread(this);
+				pr.start();
+				this.proxy = pr;
 			}
 		}
 	}
