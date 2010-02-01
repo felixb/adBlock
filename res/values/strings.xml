@@ -23,35 +23,26 @@
 	<string name="port_">Port:</string>
 	<string name="start_">Start/Reload</string>
 	<string name="stop_">Stop</string>
-	<string name="filter_">Filter:</string>
+	<string name="filter_">Filter (part of an URL):</string>
 	<string name="add_filter">Add filter</string>
 	<string name="import_">Import</string>
 	<string name="import_url_">Import URL?</string>
 	<string name="export_">Export</string>
 	<string name="more_">More Apps..</string>
 	<string name="about_">About</string>
-	<string name="about0">AdBlock blocks HTTP requests. It may be used
-		for blocking unwanted ads on webpages.
-		It will NOT block ads in apps.
-		Admob and Google are on permanent whitelist!
-	</string>
-	<string name="about1">Set APN\'s proxy preferences to localhost with
-		the port set in main application.
-	</string>
-	<string name="about2">Dear Google, please contact me before delete
-		this app from market.</string>
+	<string name="about0">AdBlock blocks HTTP requests. It may be used for blocking unwanted ads on webpages. It will NOT block ads in apps, because admob don\'t uses APN\'s proxy settings.</string>
+	<string name="about1">Set APN\'s proxy preferences to localhost withi the port set in main application.</string>
+	<string name="about2">Dear Google, please contact me before deletei this app from market.</string>
 	<string name="author_">Author:</string>
 	<string name="author">Felix Bechstein &lt;f@ub0r.de&gt;</string>
-	<string name="license">GPLv3 - see
-		http://www.gnu.org/licenses/gpl-3.0.txt</string>
+	<string name="license">GPLv3 - see http://www.gnu.org/licenses/gpl-3.0.txt</string>
 	<string name="license_">License:</string>
 	<string name="source">http://github.com/felixb/adBlock</string>
 	<string name="source_">Sourcescode:</string>
 	<string name="website_">Website:</string>
 	<string name="website">http://code.google.com/p/andblock/</string>
 	<string name="donate_">Donate</string>
-	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=8668940
-	</string>
+	<string name="donate_url">https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=8668940</string>
 	<string name="proxy_running">Proxy is running on port</string>
 	<string name="proxy_stopped">Proxy stopped</string>
 	<string name="notify_proxy">AdBlock Proxy</string>

@@ -189,9 +189,6 @@ public class Proxy extends Service implements Runnable {
 		 * @return if URL is blocked?
 		 */
 		private boolean checkURL(final String url) {
-			if (url.indexOf("admob") >= 0 || url.indexOf("google") >= 0) {
-				return false;
-			}
 			final ArrayList<String> f = Proxy.this.filter;
 			final int s = f.size();
 			for (int i = 0; i < s; i++) {

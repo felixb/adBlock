@@ -19,8 +19,9 @@
 	-->
 <resources>
 	<string-array name="updates">
+		<item>v0.5: add hi-res icons, remove google and admob from whitelist</item> 
 		<item>v0.4: fix for cyanogen mod 4.2.5</item>
-		<item>v0.3: Add Changelog, add default filter, reduce mem usage, fix protocoll issue, add german translation, fix for android 2.0</item>
-		<item>v0.0.2: Initial market release</item>
+		<item>v0.3: add changelog, add default filter, reduce mem usage, fix protocoll issue, add german translation, fix for android 2.0</item>
+		<item>v0.0.2: initial market release</item>
 	</string-array>
 </resources>

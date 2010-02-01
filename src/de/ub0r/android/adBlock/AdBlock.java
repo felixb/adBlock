@@ -216,10 +216,7 @@ public class AdBlock extends Activity implements OnClickListener,
 				.findViewById(R.id.port)).getText().toString());
 		StringBuilder sb = new StringBuilder();
 		for (String s : this.filter) {
-			if (s.indexOf("admob") < 0 // won't block admob
-					&& s.indexOf("google") < 0) { // won't block google
-				sb.append(s + "\n");
-			}
+			sb.append(s + "\n");
 		}
 		editor.putString(Proxy.PREFS_FILTER, sb.toString());
 		editor.putString(PREFS_IMPORT_URL, this.importUrl);
@@ -324,7 +321,6 @@ public class AdBlock extends Activity implements OnClickListener,
 			// BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(
 			// os));
 			// for (String s : this.filter) {
-			// if (s.indexOf("admob") < 0) { // won't block admob
 			// bw.append(s + "\n");
 			// }
 			// }
