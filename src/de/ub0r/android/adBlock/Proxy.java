@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -34,7 +36,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -51,6 +52,26 @@ import android.widget.Toast;
 public class Proxy extends Service implements Runnable {
 	/** Tag for output. */
 	private static final String TAG = "AdBlock.Proxy";
+
+	/** Method Signature: startForeground. */
+	@SuppressWarnings("unchecked")
+	private static final Class[] START_FOREGROUND_SIGNATURE = new Class[] {
+			int.class, Notification.class };
+	/** Method Signature: stopForeground. */
+	@SuppressWarnings("unchecked")
+	private static final Class[] STOP_FOREGROUND_SIGNATURE = // .
+	new Class[] { boolean.class };
+
+	/** {@link NotificationManager}. */
+	private NotificationManager mNM;
+	/** Method: startForeground. */
+	private Method mStartForeground;
+	/** Method: stopForeground. */
+	private Method mStopForeground;
+	/** Method's arguments: startForeground. */
+	private Object[] mStartForegroundArgs = new Object[2];
+	/** Method's arguments: stopForeground. */
+	private Object[] mStopForegroundArgs = new Object[1];
 
 	/** Preferences: Port. */
 	static final String PREFS_PORT = "port";
@@ -339,7 +360,7 @@ public class Proxy extends Service implements Runnable {
 						mSocket.shutdownInput();
 						mSocket.shutdownOutput();
 					} catch (IOException e) {
-						// Log.e(TAG, null, e);
+						Log.d(TAG, null, e);
 					}
 					mSocket.close();
 				}
@@ -353,7 +374,7 @@ public class Proxy extends Service implements Runnable {
 						mSocket.shutdownOutput();
 						mSocket.shutdownInput();
 					} catch (IOException e) {
-						// Log.e(TAG, null, e);
+						Log.d(TAG, null, e);
 					}
 					mSocket.close();
 				}
@@ -375,7 +396,8 @@ public class Proxy extends Service implements Runnable {
 						this.local.getInputStream(), CopyStream.BUFFSIZE);
 				lOutStream = this.local.getOutputStream();
 				lWriter = new BufferedWriter(
-						new OutputStreamWriter(lOutStream), CopyStream.BUFFSIZE);
+						new OutputStreamWriter(lOutStream), // .
+						CopyStream.BUFFSIZE);
 			} catch (IOException e) {
 				Log.e(TAG, null, e);
 				return;
@@ -509,36 +531,103 @@ public class Proxy extends Service implements Runnable {
 	}
 
 	/**
+	 * This is a wrapper around the new startForeground method, using the older
+	 * APIs if it is not available.
+	 * 
+	 * @param id
+	 *            {@link Notification} id
+	 * @param notification
+	 *            {@link Notification}
+	 * @param foreNotification
+	 *            for display of {@link Notification}
+	 */
+	private void startForegroundCompat(final int id,
+			final Notification notification, final boolean foreNotification) {
+		// If we have the new startForeground API, then use it.
+		if (this.mStartForeground != null) {
+			this.mStartForegroundArgs[0] = Integer.valueOf(id);
+			this.mStartForegroundArgs[1] = notification;
+			try {
+				this.mStartForeground.invoke(this, this.mStartForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke startForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke startForeground", e);
+			}
+		} else {
+			// Fall back on the old API.
+			this.setForeground(true);
+		}
+
+		if (foreNotification) {
+			this.mNM.notify(id, notification);
+		}
+	}
+
+	/**
+	 * This is a wrapper around the new stopForeground method, using the older
+	 * APIs if it is not available.
+	 */
+	private void stopForegroundCompat() {
+		this.mNM.cancelAll();
+		// If we have the new stopForeground API, then use it.
+		if (this.mStopForeground != null) {
+			this.mStopForegroundArgs[0] = Boolean.TRUE;
+			try {
+				this.mStopForeground.invoke(this, this.mStopForegroundArgs);
+			} catch (InvocationTargetException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke stopForeground", e);
+			} catch (IllegalAccessException e) {
+				// Should not happen.
+				Log.w(TAG, "Unable to invoke stopForeground", e);
+			}
+		} else {
+			// Fall back on the old API. Note to cancel BEFORE changing the
+			// foreground state, since we could be killed at that point.
+			// this.mNM.cancel(id);
+			this.setForeground(false);
+		}
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	@Override
+	public final void onCreate() {
+		super.onCreate();
+		this.mNM = (NotificationManager) this
+				.getSystemService(NOTIFICATION_SERVICE);
+		try {
+			this.mStartForeground = this.getClass().getMethod(
+					"startForeground", START_FOREGROUND_SIGNATURE);
+			this.mStopForeground = this.getClass().getMethod("stopForeground",
+					STOP_FOREGROUND_SIGNATURE);
+		} catch (NoSuchMethodException e) {
+			// Running on an older platform.
+			this.mStartForeground = null;
+			this.mStopForeground = null;
+		}
+	}
+
+	/**
 	 * {@inheritDoc}
 	 */
 	@Override
 	public final void onStart(final Intent intent, final int startId) {
 		super.onStart(intent, startId);
 
-		HelperAPI5 helperAPI5 = null;
-		try {
-			helperAPI5 = new HelperAPI5();
-			if (!helperAPI5.isAvailable()) {
-				helperAPI5 = null;
-			}
-		} catch (VerifyError e) {
-			helperAPI5 = null;
-			Log.i(TAG, "no api 5");
-		}
-
 		// Don't kill me!
-		if (helperAPI5 == null) {
-			this.setForeground(true);
-		} else {
-			final Notification notification = new Notification(
-					R.drawable.stat_notify_proxy, "", System
-							.currentTimeMillis());
-			final PendingIntent contentIntent = PendingIntent.getActivity(this,
-					0, new Intent(this, AdBlock.class), 0);
-			notification.setLatestEventInfo(this, this
-					.getString(R.string.notify_proxy), "", contentIntent);
-			notification.defaults |= Notification.FLAG_NO_CLEAR;
-		}
+		final Notification notification = new Notification(
+				R.drawable.stat_notify_proxy, "", System.currentTimeMillis());
+		final PendingIntent contentIntent = PendingIntent.getActivity(this, 0,
+				new Intent(this, AdBlock.class), 0);
+		notification.setLatestEventInfo(this, this
+				.getString(R.string.notify_proxy), "", contentIntent);
+		notification.defaults |= Notification.FLAG_NO_CLEAR;
+		this.startForegroundCompat(0, notification, false);
 
 		SharedPreferences preferences = PreferenceManager
 				.getDefaultSharedPreferences(this);
@@ -582,8 +671,7 @@ public class Proxy extends Service implements Runnable {
 		super.onDestroy();
 		Toast.makeText(this, R.string.proxy_stopped, Toast.LENGTH_LONG).show();
 		this.stop = true;
-		((NotificationManager) this
-				.getSystemService(Context.NOTIFICATION_SERVICE)).cancelAll();
+		this.stopForegroundCompat();
 	}
 
 	/**
