@@ -26,7 +26,7 @@
 	<string name="about2">Liebes Google, bitte melde dich bei mir, bevor du diese App aus dem Market löschst.</string>
 	<string name="author_">Autor:</string>
 	<string name="license">GPLv3 - siehei http://www.gnu.org/licenses/gpl-3.0.txt</string>
-	<string name="license_">Lizens:</string>
+	<string name="license_">Lizenz:</string>
 	<string name="donate_">Spenden</string>
 	<string name="filter_">Filter (Teil einer URL):</string>
 	<string name="proxy_running">Proxy läuft auf Port</string>
